@@ -1,9 +1,12 @@
 com\ar\bloodbank\constants\PasswordEncryptionWithAES.class
 com\ar\bloodbank\constants\Constants.class
-com\ar\bankblood\functions\Sqlfunction.class
 com\ar\bankblood\main\DonorServlet.class
 com\ar\bankblood\main\BloodBankServlet.class
 com\ar\bloodbank\connections\DatabaseConnect.class
 com\ar\bloodbank\constants\MysqlConnectionObject.class
 com\ar\bankblood\main\resources\DonorResource.class
 com\ar\bankblood\main\resources\UserResource.class
+com\ar\bankblood\main\resources\JsonResponse.class
+com\ar\bloodbank\constants\ReturnObject.class
+com\ar\bankblood\functions\Sqlfunction.class
+com\ar\bankblood\main\AdminServlet.class

@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class BloodBankServlet extends HttpServlet {
 
     
-   // POST -> /donor
+ 
    
    
     @Override

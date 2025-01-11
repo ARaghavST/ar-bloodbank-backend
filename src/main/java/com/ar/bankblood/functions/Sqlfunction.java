@@ -6,11 +6,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import com.ar.bankblood.main.resources.DonorResource;
 import com.ar.bankblood.main.resources.UserResource;
-import com.ar.bloodbank.constants.PasswordEncryptionWithAES;
-import com.google.gson.Gson;
+import com.ar.bloodbank.constants.ReturnObject;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
+
+// this class will be used to create return data object containing data from mysql and errors (if any)
 
 
 
@@ -23,11 +24,12 @@ public class Sqlfunction {
     }
     
     // This function will give list of all donors, which we will see in receivers page
-    public List<DonorResource> GetDonors(){
+    public ReturnObject GetDonors(){
         
         // List is used to define dynamic size array , means it doesn't needs to be defined by its size
             List <DonorResource> donorsList = null;
            try{
+            
             
             Statement statement = this.connection.createStatement();
           
@@ -56,14 +58,19 @@ public class Sqlfunction {
         
            }catch(SQLException e){
                System.out.print("Exception occured : "+e.getMessage());
-               return null;
+               
+               // this will return a none object and and error string
+               return new ReturnObject(null,e.getMessage());
+               
            }
-           return donorsList;
+           // this will return a object containing donorsList and empty error string
+          return new ReturnObject(donorsList,"");
+        
     }
     
     // user will be donor after he/she passes the test
     // This function will create (signup) new user in users table
-    public int AddNewUserMySQL(UserResource user){
+    public ReturnObject AddNewUserMySQL(UserResource user){
         
         String insertQuery = "INSERT into bloodbank.users (name,email,phone,password,gender,dob,status) values (?,?,?,?,?,?,?)";
         int insertionDone;
@@ -84,9 +91,54 @@ public class Sqlfunction {
             
         }catch(SQLException e){
             System.out.print("Exception occured : "+e.getMessage());
-            return 0;
+            return new ReturnObject(0,e.getMessage());
         }
         
-        return insertionDone;
+        return new ReturnObject(insertionDone,"");
+    }
+    
+    
+    
+    // 
+    
+    public ReturnObject GetUsersByStatus(){
+        
+        String userQuery = "SELECT * from users where status = 0";
+        List<UserResource> usersList=null;
+        
+       try{
+           // Statement class is an interface
+            Statement statement = this.connection.createStatement();
+            
+            // this will create List of UserResource ( i.e. will initialize the usersList )
+            usersList=new ArrayList<>();
+            
+            // this will execute the query mentioned in line 106
+            ResultSet resultSet = statement.executeQuery(userQuery);
+            
+            while(resultSet.next()){
+               String donorId = resultSet.getString("donor_id");
+               String name = resultSet.getString("name");
+               String email = resultSet.getString("email");
+               long phno = resultSet.getLong("phone");
+               String gender = resultSet.getString("gender");
+               String password = resultSet.getString("password");
+               String dob = resultSet.getString("dob");
+               int status = resultSet.getInt("status");
+               
+               UserResource user = new UserResource(name,dob,email,gender,password,phno,status);
+               
+               // usersList is a list of all users which have status 0
+               usersList.add(user);   
+            }
+            
+            
+       }catch(Exception e){
+             System.out.print("Exception occured : "+e.getMessage());
+             return new ReturnObject(null,e.getMessage());
+       }
+
+       
+       return new ReturnObject(usersList,""); 
     }
 }

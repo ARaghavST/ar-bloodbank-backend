@@ -2,9 +2,11 @@ package com.ar.bankblood.main;
 
 import com.ar.bankblood.functions.Sqlfunction;
 import com.ar.bankblood.main.resources.DonorResource;
+import com.ar.bankblood.main.resources.JsonResponse;
 import com.ar.bankblood.main.resources.UserResource;
 import com.ar.bloodbank.connections.DatabaseConnect;
 import com.ar.bloodbank.constants.MysqlConnectionObject;
+import com.ar.bloodbank.constants.ReturnObject;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,22 +31,34 @@ public class DonorServlet extends HttpServlet {
         
         DatabaseConnect db = new DatabaseConnect();
         
+        JsonResponse res;
+            // GSON is used to convert Java objects into JSON ( Javascript ) objects 
+         Gson gson=new Gson();
+          PrintWriter out= response.getWriter();
         MysqlConnectionObject mysql=db.ConnectAndReturnConnection();
           
-        Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
-        
-        List<DonorResource> donorsList = donorFunction.GetDonors();
-         // GSON is used to convert Java objects into JSON ( Javascript ) objects 
-        Gson gson=new Gson();
-         
-        String json = gson.toJson(donorsList);
-        
-        PrintWriter out = response.getWriter();
+        if (mysql.connection == null) {
+            res=new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"MySQL Connection cannot be established","Connection is null",null);
+        }else{
+            Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
+               
+        // GetDonors is returning an object of type (class) ReturnObject
+        ReturnObject ret = donorFunction.GetDonors();
+           
+        // ret.getObject returns an Object , we typecast it to List<DonorResource>
+        List<DonorResource> donorsList = (List<DonorResource>)ret.getObject();
+       
         response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
-      
-        out.print(json);
-
+        
+        if (!ret.getError().equals("")){
+           res=new JsonResponse(HttpServletResponse.SC_BAD_REQUEST,"Cannot fetch donors",ret.getError(),null);
+        }else{
+            res=new JsonResponse(HttpServletResponse.SC_OK,"Donors fetched successfully",ret.getError(),donorsList);
+        }
+        }
+ 
+        String resJon = gson.toJson(res);
+        out.println(resJon);
         out.flush();       
     }
 
@@ -71,6 +85,7 @@ public class DonorServlet extends HttpServlet {
         // this converts stringbuilder into JAVA string
         String requestBody = sb.toString();
         
+        JsonResponse res;
         // "gson" object converts JAVA string into Java object 
         Gson gson=new Gson();
         
@@ -82,32 +97,28 @@ public class DonorServlet extends HttpServlet {
         
         MysqlConnectionObject mysql=db.ConnectAndReturnConnection();
           
-        Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
-        
-        int count = donorFunction.AddNewUserMySQL(user);
-        
-         String jsonResponse = "{"
-                + "\"status\": \"success\","
-                + "\"message\": \"User inserted in db!\""
-                + "}";
-           response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
+        if (mysql.connection==null){
+             res=new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"MySQL Connection cannot be established","Connection is null",null);
+        }else{
+            Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
+            ReturnObject ret = donorFunction.AddNewUserMySQL(user);
+            
+                 if(!ret.getError().equals("")){
+                res=new JsonResponse(HttpServletResponse.SC_BAD_REQUEST,"Cannot insert new user",ret.getError(),null);
+            }else{
+                res=new JsonResponse(HttpServletResponse.SC_OK,"User inserted successfully",ret.getError(),null);
+            }
+            
+        }
+       
+        response.setContentType("application/json");
 
         // Write JSON response to output stream
         PrintWriter out = response.getWriter();
         
-        if (count>0){
-            out.print(jsonResponse);
-            out.flush();
-        }else{
-            jsonResponse = "{"
-                + "\"status\": \"error\","
-                + "\"message\": \"Some error occured in insertion!\""
-                + "}";
-             out.print(jsonResponse);
-            out.flush();
-        }
-        
+        String resJson = gson.toJson(res);
+        out.println(resJson);
+        out.flush();
         
         
     }
