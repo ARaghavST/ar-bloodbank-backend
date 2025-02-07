@@ -1,6 +1,7 @@
 package com.ar.bankblood.main;
 
 import com.ar.bankblood.functions.Sqlfunction;
+import com.ar.bankblood.main.resources.AdminResource;
 import com.ar.bankblood.main.resources.JsonResponse;
 import com.ar.bankblood.main.resources.UserResource;
 import com.ar.bloodbank.connections.DatabaseConnect;
@@ -13,6 +14,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -102,7 +104,59 @@ public class AdminServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-      
+        
+        // sb stores the data sent to the /admin in string
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        
+        JsonResponse res;
+        Gson gson=new Gson();
+        
+        String payload=sb.toString();
+        
+        AdminResource loginAdmin = gson.fromJson(payload, AdminResource.class);
+        
+        
+         DatabaseConnect db = new DatabaseConnect();
+         MysqlConnectionObject mysql=db.ConnectAndReturnConnection();
+        
+          Sqlfunction adminFunction = new Sqlfunction(mysql.connection);
+            
+          ReturnObject ret = adminFunction.IsValidAdmin(loginAdmin);
+          
+          if (ret.getError() != ""){
+               res=new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Some error in login",ret.getError(),null);
+          }
+          
+          AdminResource admin=(AdminResource)ret.getObject();
+          
+          // admin null means we receive no admin user (object) from mysql
+          if (admin == null){
+               res=new JsonResponse(HttpServletResponse.SC_OK,"Cannot login as no user found","",null);
+          }else{
+              // user found refers to admin found in mysql
+               res=new JsonResponse(HttpServletResponse.SC_OK,"User found","",admin);
+          }
+        
+     
+        response.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"); // Allowed methods
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allowed headers
+        response.setContentType("application/json");
+        
+         String resJon = gson.toJson(res);
+             
+           
+         
+         PrintWriter out= response.getWriter();
+         out.println(resJon);
+         out.flush(); 
+        
     }
 
     

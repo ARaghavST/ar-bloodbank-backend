@@ -1,4 +1,5 @@
 com\ar\bloodbank\constants\PasswordEncryptionWithAES.class
+com\ar\bankblood\main\resources\AdminResource.class
 com\ar\bloodbank\constants\Constants.class
 com\ar\bankblood\main\DonorServlet.class
 com\ar\bankblood\main\BloodBankServlet.class

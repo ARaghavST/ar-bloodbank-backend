@@ -48,6 +48,9 @@ public class DonorServlet extends HttpServlet {
         // ret.getObject returns an Object , we typecast it to List<DonorResource>
         List<DonorResource> donorsList = (List<DonorResource>)ret.getObject();
        
+        response.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"); // Allowed methods
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allowed headers
         response.setContentType("application/json");
         
         if (!ret.getError().equals("")){

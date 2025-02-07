@@ -1,5 +1,6 @@
 package com.ar.bankblood.functions;
 
+import com.ar.bankblood.main.resources.AdminResource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -140,5 +141,37 @@ public class Sqlfunction {
 
        
        return new ReturnObject(usersList,""); 
+    }
+    
+    
+    public ReturnObject IsValidAdmin(AdminResource admin){
+        String searchQuery = "SELECT * FROM admin WHERE email = ? AND password = ?";
+        System.out.println(admin.getEmail());
+         System.out.println(admin.getPassword());
+        
+        AdminResource loggedAdmin=null;
+        
+        try{
+            PreparedStatement p = this.connection.prepareStatement(searchQuery);
+            
+            p.setString(1, admin.getEmail());
+            p.setString(2, admin.getPassword());
+            
+            ResultSet r = p.executeQuery();
+            
+            while(r.next()){
+                int sno=r.getInt("sno");
+                String email=r.getString("email");
+                String name=r.getString("name");
+                String password=r.getString("password");
+                loggedAdmin=new AdminResource(email,password,name,sno);
+            }
+              
+        }catch(SQLException e){
+            System.out.print("Exception occured : "+e.getMessage());
+            return new ReturnObject(loggedAdmin,e.getMessage());
+        }
+        
+        return new ReturnObject(loggedAdmin,"");
     }
 }
