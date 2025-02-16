@@ -1,6 +1,8 @@
 package com.ar.bankblood.functions;
 
+import Helpers.Helpers;
 import com.ar.bankblood.main.resources.AdminResource;
+import com.ar.bankblood.main.resources.AdminSubmitResource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -126,8 +128,9 @@ public class Sqlfunction {
                String password = resultSet.getString("password");
                String dob = resultSet.getString("dob");
                int status = resultSet.getInt("status");
+               int sno = resultSet.getInt("sno");
                
-               UserResource user = new UserResource(name,dob,email,gender,password,phno,status);
+               UserResource user = new UserResource(name,dob,email,gender,password,phno,status,sno);
                
                // usersList is a list of all users which have status 0
                usersList.add(user);   
@@ -173,5 +176,64 @@ public class Sqlfunction {
         }
         
         return new ReturnObject(loggedAdmin,"");
+    }
+
+
+    public ReturnObject UpdateAndReturnCreatedDonorId(AdminSubmitResource adminSubmitResource){
+        
+       
+       String checkRandomStringQuery = "SELECT COUNT(*) as COUNT FROM users WHERE donor_id LIKE '%?%'";
+        String randomDonorId = "";
+       PreparedStatement ps=null;
+       int count = 1;
+       
+        try{
+            while(count > 0){
+                randomDonorId = Helpers.generateRandomString();
+                ps = this.connection.prepareStatement(checkRandomStringQuery);
+            
+                ResultSet rs = ps.executeQuery();
+            
+                while(rs.next()){
+                    count = rs.getInt(1);
+                }
+            }
+            
+            String updateUsersQuery = "UPDATE users SET donor_id = ? , status = 1 WHERE sno = ?";
+            
+            ps = this.connection.prepareStatement(updateUsersQuery);
+            
+            ps.setString(1, randomDonorId);
+            ps.setInt(2, adminSubmitResource.getSno());
+            
+            int IsUpdated = ps.executeUpdate();
+            
+            if (IsUpdated == 0){
+                 return new ReturnObject("","Update users table failed !");
+            }
+            
+            String insertDonorQuery = "INSERT into donors (donor_id, blood_group, `amount(ml)`) value (?,?,?)";
+            
+            ps = this.connection.prepareStatement(insertDonorQuery);
+            ps.setString(1, randomDonorId);
+            ps.setString(2, adminSubmitResource.getBlood_group());
+            ps.setDouble(3, adminSubmitResource.getAmount());
+            
+            int InsertionDone = ps.executeUpdate();
+            
+            System.out.println("Insertion done ? "+InsertionDone);
+            
+            if (InsertionDone == 0){
+                 return new ReturnObject("","Insertion of donors in table failed !");
+            }
+            
+            this.connection.close();
+            
+        }catch(SQLException e){
+            System.out.print("Exception occured : "+e.getMessage());
+            return new ReturnObject("",e.getMessage());
+        }
+       
+         return new ReturnObject(randomDonorId,"User registered in BloodBank !"); 
     }
 }

@@ -2,6 +2,7 @@ package com.ar.bankblood.main;
 
 import com.ar.bankblood.functions.Sqlfunction;
 import com.ar.bankblood.main.resources.AdminResource;
+import com.ar.bankblood.main.resources.AdminSubmitResource;
 import com.ar.bankblood.main.resources.JsonResponse;
 import com.ar.bankblood.main.resources.UserResource;
 import com.ar.bloodbank.connections.DatabaseConnect;
@@ -89,7 +90,9 @@ public class AdminServlet extends HttpServlet {
              /** Line 88 is used to specify that our response is of type json because we want json type
               only for our frontend
               **/
-             
+             response.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+             response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"); // Allowed methods
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allowed headers
              response.setContentType("application/json");
              
              out.println(resJon);
@@ -159,6 +162,81 @@ public class AdminServlet extends HttpServlet {
         
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       // sb stores the data sent to the /admin in string
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        
+        JsonResponse res;
+        Gson gson=new Gson();
+        
+        String payload=sb.toString();
+        
+        
+       
+        
+        
+        
+        
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    
+      
+        PrintWriter out= response.getWriter();
+          JsonResponse res;
+        Gson gson=new Gson();
+
+        // sb stores the data sent to the /admin in string
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        
+      
+        
+        String payload=sb.toString();
+        
+         
+        AdminSubmitResource submitResource = gson.fromJson(payload, AdminSubmitResource.class);
+        
+         DatabaseConnect db = new DatabaseConnect();
+         MysqlConnectionObject mysql=db.ConnectAndReturnConnection();
+        
+         Sqlfunction adminFunction = new Sqlfunction(mysql.connection);
+         
+         ReturnObject ret = adminFunction.UpdateAndReturnCreatedDonorId(submitResource);
+         
+           if (ret.getError() != ""){
+               res=new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Some error in update request",ret.getError(),null);
+          }
+           
+         res = new JsonResponse(HttpServletResponse.SC_OK,"User registered","",(String)ret.getObject());
+         
+       
+         
+         
+        response.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"); // Allowed methods
+        response.setContentType("application/json");
+        
+        String resJon = gson.toJson(res);
+             
+         out.println(resJon);
+         out.flush(); 
+    }
+
+    
     
 
 }
