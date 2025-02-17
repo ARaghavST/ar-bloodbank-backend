@@ -34,7 +34,6 @@ public class DatabaseConnect {
 
             // connection to mysql is opening
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println(connection.getClientInfo());
             if (connection != null) {
                 // connection is done successfully
                 System.out.println("Connected to the database!");

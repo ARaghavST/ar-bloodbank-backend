@@ -18,25 +18,32 @@ public class Sqlfunction {
 
     public Connection connection;
 
+    private static final int LIMIT = 10;
+
     public Sqlfunction(Connection c) {
         this.connection = c;
     }
 
     // This function will give list of all donors, which we will see in receivers page
-    public ReturnObject GetDonors() {
+    public ReturnObject GetDonors(/**
+             * filters
+             */
+            ) {
 
         // List is used to define dynamic size array , means it doesn't needs to be defined by its size
         List<DonorResource> donorsList = null;
         try {
-
             Statement statement = this.connection.createStatement();
-
             donorsList = new ArrayList<>();
-
             // Defined a SELECT query to show donors in receivers page
-            String query = "SELECT donors.donor_id,donors.blood_group,`amount(ml)`,users.name,email,phone FROM donors join users on users.donor_id = donors.donor_id;                           ";
+            String query = "SELECT donors.donor_id,donors.blood_group,`amount(ml)`,users.name,email,phone FROM donors join users on users.donor_id = donors.donor_id";
 
-            // Execute the query
+            // Query which applies sorting and search functionality
+            // String query = "SELECT donors.donor_id,donors.blood_group,`amount(ml)`,users.name,email,phone FROM donors join users on users.donor_id = donors.donor_id ORDER BY `amount(ml)` DESC ";
+//            if (!filters.get("search").equals("")) // Execute the query
+//            {
+//                query += String.format("WHERE `amount(ml)` >= %f", Double.parseDouble(filters.get("search")));
+//            }
             ResultSet resultSet = statement.executeQuery(query);
 
             while (resultSet.next()) {

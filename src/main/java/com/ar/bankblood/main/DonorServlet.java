@@ -24,6 +24,7 @@ public class DonorServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        response.setContentType("application/json");
         DatabaseConnect db = new DatabaseConnect();
 
         JsonResponse res;
@@ -32,6 +33,9 @@ public class DonorServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         MysqlConnectionObject mysql = db.ConnectAndReturnConnection();
 
+//        Map<String, String> filters = new HashMap<>();
+//
+//        filters.put("search", request.getParameter("search"));
         if (mysql.connection == null) {
             res = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "MySQL Connection cannot be established", "Connection is null", null);
         } else {
@@ -40,6 +44,7 @@ public class DonorServlet extends HttpServlet {
             // GetDonors is returning an object of type (class) ReturnObject
             ReturnObject ret = donorFunction.GetDonors();
 
+//            ReturnObject ret = donorFunction.GetDonors(filters);
             // ret.getObject returns an Object , we typecast it to List<DonorResource>
             List<DonorResource> donorsList = (List<DonorResource>) ret.getObject();
 
@@ -51,6 +56,7 @@ public class DonorServlet extends HttpServlet {
         }
 
         String resJon = gson.toJson(res);
+
         out.println(resJon);
         out.flush();
     }
