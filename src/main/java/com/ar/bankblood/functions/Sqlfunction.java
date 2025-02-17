@@ -148,10 +148,7 @@ public class Sqlfunction {
     
     
     public ReturnObject IsValidAdmin(AdminResource admin){
-        String searchQuery = "SELECT * FROM admin WHERE email = ? AND password = ?";
-        System.out.println(admin.getEmail());
-         System.out.println(admin.getPassword());
-        
+        String searchQuery = "SELECT * FROM admin WHERE email = ? AND password = ?"; 
         AdminResource loggedAdmin=null;
         
         try{

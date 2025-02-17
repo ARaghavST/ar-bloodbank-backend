@@ -3,15 +3,24 @@ package com.ar.bloodbank.connections;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import io.github.cdimascio.dotenv.Dotenv;
 import com.ar.bloodbank.constants.*;
 
 
 public class DatabaseConnect {
     
-    private static final String URL = "jdbc:mysql://localhost:3306/bloodbank";
-    private static final String USER = "root";
-    private static final String PASSWORD = "AnandRaghav";
+    private static  String URL,USER,PASSWORD,DATABASE;
     
+    public DatabaseConnect(){
+        Dotenv dotenv = Dotenv.load();
+        
+        String host = dotenv.get("MYSQL_HOST");
+        String database = dotenv.get("MYSQL_DB");
+        URL = String.format("jdbc:mysql://%s:3306/%s",host,database);
+        
+        USER = dotenv.get("MYSQL_USERNAME");
+        PASSWORD = dotenv.get("MYSQL_PASSWORD");
+    };
     
     
     
