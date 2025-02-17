@@ -5,7 +5,7 @@
     <artifactId>ar-bloodbank</artifactId>
     <version>1.0</version>
     <packaging>war</packaging>
-    <name>ar-bloodbank-1.0</name>
+    <name>bloodbank</name>
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
