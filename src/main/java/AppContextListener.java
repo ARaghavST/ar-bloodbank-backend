@@ -1,4 +1,5 @@
 
+import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -24,6 +25,7 @@ public class AppContextListener implements ServletContextListener {
             Driver driver = drivers.nextElement();
             try {
                 DriverManager.deregisterDriver(driver);
+                AbandonedConnectionCleanupThread.checkedShutdown();
                 System.out.println("Deregistered JDBC driver: " + driver);
             } catch (Exception e) {
                 System.err.println("Error deregistering driver: " + driver + " - " + e.getMessage());
