@@ -1,6 +1,5 @@
 package com.ar.bloodbank.connections;
 
-import com.ar.bloodbank.constants.*;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +7,7 @@ import java.sql.SQLException;
 
 public class DatabaseConnect {
 
-    private static String URL, USER, PASSWORD, DATABASE;
+    private static String URL, USER, PASSWORD;
 
     public DatabaseConnect() {
         Dotenv dotenv = Dotenv.load();
@@ -25,7 +24,7 @@ public class DatabaseConnect {
 
 
 
-    public MysqlConnectionObject ConnectAndReturnConnection() {
+    public Connection ConnectAndReturnConnection() {
         Connection connection = null;
 
         try {
@@ -34,18 +33,19 @@ public class DatabaseConnect {
 
             // connection to mysql is opening
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
+
             if (connection != null) {
                 // connection is done successfully
                 System.out.println("Connected to the database!");
             }
         } catch (ClassNotFoundException e) {
             System.out.println("MySQL JDBC Driver not found.");
-            return new MysqlConnectionObject(null, e.getMessage());
+            return null;
         } catch (SQLException e) {
             System.out.println("Connection failed!");
-            return new MysqlConnectionObject(null, e.getMessage());
+            return null;
         }
 
-        return new MysqlConnectionObject(connection, "");
+        return connection;
     }
 }
