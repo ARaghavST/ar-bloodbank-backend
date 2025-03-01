@@ -9,6 +9,7 @@ com\ar\bloodbank\main\CorsFilter.class
 com\ar\bloodbank\main\resources\DonorResource.class
 com\ar\bloodbank\constants\ReturnObject.class
 com\ar\bloodbank\main\BloodStockServlet.class
+com\ar\bloodbank\main\resources\ReceiverResource.class
 AppContextListener.class
 com\ar\bloodbank\functions\MysqlFunctions.class
 com\ar\bloodbank\main\resources\UserResource.class

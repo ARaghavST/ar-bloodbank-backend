@@ -3,12 +3,14 @@ package com.ar.bloodbank.main;
 import com.ar.bloodbank.connections.DatabaseConnect;
 import com.ar.bloodbank.functions.MysqlFunctions;
 import com.ar.bloodbank.main.resources.JsonResponse;
+import com.ar.bloodbank.main.resources.ReceiverResource;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -69,8 +71,56 @@ public class BloodStockServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        // Thread safe string writer
+        // WHy ? we need to get string in buffers ( small bits ) as a single complete string
+        StringBuilder sb = new StringBuilder();
+        // BufferedReader helps us to read the bytes of data coming from request efficiently
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            // reader.readLine reads line by line data
+            // reader is an object created in line 79
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            // after this line we are sure that we will get payload of sent dat in sb via body through POST request
+        }
+        // storing stringbuilder sb in Java strings
+        String payload = sb.toString();
+        
+        // Gson converts JSON string into JAVA Objects (POJO)
+        Gson gson = new Gson();
+        // Below converts the payload string into ReceiverResource object
+        ReceiverResource receiver = gson.fromJson(payload, ReceiverResource.class);
+        
+        // Below lines 98 -> 99 , connects to mysql and returns the connection
+        DatabaseConnect db = new DatabaseConnect();
+        Connection connection = db.ConnectAndReturnConnection();
+        
+        JsonResponse jsonRes;
+        PrintWriter out = response.getWriter();
+        response.setContentType("application/json");
+        
+        if (connection != null){
+             // Below creates an object of Mysqlfunctions class to call the function which will insert in receivers table in mysql db
+            MysqlFunctions mysql = new MysqlFunctions(connection);
+       
+            int insertionDone = mysql.InsertReceiverData(receiver);
+        
+            if (insertionDone==1){
+                 jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, null);
+            }else{
+                jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert receiver's data", "Error in insertion mysql", null);
+            }
+        }else{
+              jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot POST /bloodstock", "Exception in establishing connection !", null);
+        }
+        
+        out.println(gson.toJson(jsonRes));
+        out.flush();
     }
 
+    
+    
 }
