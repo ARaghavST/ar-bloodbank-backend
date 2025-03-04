@@ -2,8 +2,8 @@ package com.ar.bloodbank.main;
 
 import com.ar.bloodbank.connections.DatabaseConnect;
 import com.ar.bloodbank.functions.MysqlFunctions;
-import com.ar.bloodbank.main.resources.JsonResponse;
-import com.ar.bloodbank.main.resources.ReceiverResource;
+import com.ar.bloodbank.resources.JsonResponse;
+import com.ar.bloodbank.resources.ReceiverResource;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,6 +24,7 @@ public class BloodStockServlet extends HttpServlet {
 
         Gson gson = new Gson();
         JsonResponse jsonRes;
+        
 
         // getting a writer (likhne wala) for response, response will give a writer (pen)
         PrintWriter out = response.getWriter();
