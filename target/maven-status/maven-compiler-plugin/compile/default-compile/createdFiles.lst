@@ -1,8 +1,9 @@
 com\ar\bloodbank\resources\AdminResource.class
 com\ar\bloodbank\resources\ReceiverResource.class
+com\ar\bloodbank\dbconnection\DatabaseConnect.class
 com\ar\bloodbank\helpers\PasswordEncryptionWithAES.class
+com\ar\bloodbank\main\UpdateStatusServlet.class
 com\ar\bloodbank\main\login\DonorLoginServlet.class
-com\ar\bloodbank\connections\DatabaseConnect.class
 com\ar\bloodbank\resources\JsonResponse.class
 com\ar\bloodbank\main\CorsFilter.class
 com\ar\bloodbank\resources\AdminSubmitResource.class
@@ -13,3 +14,6 @@ com\ar\bloodbank\main\BloodStockServlet.class
 com\ar\bloodbank\main\AdminServlet.class
 AppContextListener.class
 com\ar\bloodbank\functions\MysqlFunctions.class
+com\ar\bloodbank\resources\UpdateBodyResource.class
+com\ar\bloodbank\main\DonorServlet.class
+com\ar\bloodbank\main\RHistoryServlet.class

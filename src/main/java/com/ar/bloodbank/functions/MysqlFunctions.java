@@ -223,6 +223,146 @@ public class MysqlFunctions {
     }
 
     public Object GetReceiversHistory() {
+
+        String approvedReceiversQuery = "SELECT * from receiver WHERE status = 1;";
+
+        try {
+            Statement mysqlConvStatementObject = this.connection.createStatement();
+
+            ResultSet approvedReceiversResult = mysqlConvStatementObject.executeQuery(approvedReceiversQuery);
+            List<ReceiverResource> approvedReceiversList = new ArrayList();
+
+            while (approvedReceiversResult.next()) {
+                int sno = approvedReceiversResult.getInt("sno");
+                String name = approvedReceiversResult.getString("name");
+                String phno = approvedReceiversResult.getString("phno");
+                String email = approvedReceiversResult.getString("email");
+                String aadhar = approvedReceiversResult.getString("aadhar");
+                String bg_needed = approvedReceiversResult.getString("bg_needed");
+                Double quantity = approvedReceiversResult.getDouble("quantity");
+                String req_date = approvedReceiversResult.getString("req_date");
+                String rec_date = approvedReceiversResult.getString("rec_date");
+                int status = approvedReceiversResult.getInt("status");
+
+                ReceiverResource receiver = new ReceiverResource(sno, status, name, phno, email, aadhar, bg_needed, req_date, rec_date, quantity);
+                approvedReceiversList.add(receiver);
+            }
+            return approvedReceiversList;
+
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+
         return null;
+    }
+
+    /**
+     * This function will update the receivers status in receiver table for
+     * given receiver id (receivers) .
+     *
+     * @param id
+     *
+     * @return true/false
+     *
+     */
+    public boolean UpdateReceiverStatus(int id) {
+        String updateQuery = "UPDATE receiver SET status = 1 , rec_date = ? WHERE sno = ?;";
+
+        try {
+            PreparedStatement receiverUpdateStatement = this.connection.prepareStatement(updateQuery);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Get the current date and time
+            LocalDateTime now = LocalDateTime.now();
+            // Format and print it
+            String recDate = now.format(formatter);
+
+            receiverUpdateStatement.setString(1, recDate);
+            receiverUpdateStatement.setInt(2, id);
+
+            int isUpdated = receiverUpdateStatement.executeUpdate();
+
+            if (isUpdated > 0) {
+                return true;
+            }
+
+        } catch (SQLException ex) {
+            System.out.println("Exception occured : " + ex.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * This function will update the donor's status in donors table for given id
+     * (donors) .
+     *
+     * @param id
+     *
+     * @return true/false
+     *
+     */
+    public boolean UpdateDonorStatus(int id) {
+        String updateQuery = "UPDATE donors SET status = 1 , reg_on = ?, availability = 'YES' WHERE id = ?;";
+
+        try {
+            PreparedStatement receiverUpdateStatement = this.connection.prepareStatement(updateQuery);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Get the current date and time
+            LocalDateTime now = LocalDateTime.now();
+            // Format and print it
+            String registeredOn = now.format(formatter);
+
+            receiverUpdateStatement.setString(1, registeredOn);
+            receiverUpdateStatement.setInt(2, id);
+
+            int isUpdated = receiverUpdateStatement.executeUpdate();
+
+            if (isUpdated > 0) {
+                return true;
+            }
+
+        } catch (SQLException ex) {
+            System.out.println("Exception occured : " + ex.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * This function will insert the new donor data donors table for given id
+     * (donors) .
+     *
+     * @param signupData
+     *
+     * @return
+     *
+     */
+    public boolean InsertDonorData(DonorResource data) {
+
+        String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status) values (?,?,?,?,?,?,?,?,?)";
+
+        try {
+            PreparedStatement insertDonorStatement = this.connection.prepareStatement(insertDonorQuery);
+
+            insertDonorStatement.setString(1, data.name);
+            insertDonorStatement.setString(2, data.dob);
+            insertDonorStatement.setString(3, data.gender);
+            insertDonorStatement.setString(4, data.blood_group);
+            insertDonorStatement.setString(5, data.email);
+            insertDonorStatement.setString(6, data.phno);
+            insertDonorStatement.setInt(7, data.e_ready);
+            insertDonorStatement.setString(8, "NO");
+            insertDonorStatement.setInt(9, 0);
+
+            int isInserted = insertDonorStatement.executeUpdate();
+
+            if (isInserted == 1) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+        return false;
     }
 }

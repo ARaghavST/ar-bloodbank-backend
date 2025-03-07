@@ -1,6 +1,6 @@
 package com.ar.bloodbank.main;
 
-import com.ar.bloodbank.connections.DatabaseConnect;
+import com.ar.bloodbank.dbconnection.DatabaseConnect;
 import com.ar.bloodbank.functions.MysqlFunctions;
 import com.ar.bloodbank.resources.JsonResponse;
 import com.ar.bloodbank.resources.ReceiverResource;
@@ -24,10 +24,9 @@ public class BloodStockServlet extends HttpServlet {
 
         Gson gson = new Gson();
         JsonResponse jsonRes;
-        
 
         // getting a writer (likhne wala) for response, response will give a writer (pen)
-        PrintWriter out = response.getWriter();
+        PrintWriter writer = response.getWriter();
 
         response.setContentType("application/json");
 
@@ -44,7 +43,8 @@ public class BloodStockServlet extends HttpServlet {
             if (stockMap == null) {
                 // there is some error
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot get data , due to error", "Exception in fetching bloodstock!", null);
-            } else {
+            }
+            else {
 
                 String bloodStockJsonString = gson.toJson(stockMap);
                 jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, bloodStockJsonString);
@@ -53,10 +53,11 @@ public class BloodStockServlet extends HttpServlet {
             // below line will convert the JAVA response object into JSON string
             String responseString = gson.toJson(jsonRes);
 
-            // below line will write the string to response output
-            out.println(responseString);
+            // below line will write the string to response writerput
+            writer.println(responseString);
 
-        } else {
+        }
+        else {
 
             // from here we will send err message in response when connection is null
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot GET bloodstock", "Exception in establishing connection !", null);
@@ -64,9 +65,9 @@ public class BloodStockServlet extends HttpServlet {
             // below line will convert the JAVA response object into JSON string
             String responseString = gson.toJson(jsonRes);
 
-            // below line will write the string to response output
-            out.println(responseString);
-            out.flush();
+            // below line will write the string to response writerput
+            writer.println(responseString);
+            writer.flush();
         }
 
     }
@@ -89,39 +90,39 @@ public class BloodStockServlet extends HttpServlet {
         }
         // storing stringbuilder sb in Java strings
         String payload = sb.toString();
-        
+
         // Gson converts JSON string into JAVA Objects (POJO)
         Gson gson = new Gson();
         // Below converts the payload string into ReceiverResource object
         ReceiverResource receiver = gson.fromJson(payload, ReceiverResource.class);
-        
+
         // Below lines 98 -> 99 , connects to mysql and returns the connection
         DatabaseConnect db = new DatabaseConnect();
         Connection connection = db.ConnectAndReturnConnection();
-        
+
         JsonResponse jsonRes;
-        PrintWriter out = response.getWriter();
+        PrintWriter writer = response.getWriter();
         response.setContentType("application/json");
-        
-        if (connection != null){
-             // Below creates an object of Mysqlfunctions class to call the function which will insert in receivers table in mysql db
+
+        if (connection != null) {
+            // Below creates an object of Mysqlfunctions class to call the function which will insert in receivers table in mysql db
             MysqlFunctions mysql = new MysqlFunctions(connection);
-       
+
             int insertionDone = mysql.InsertReceiverData(receiver);
-        
-            if (insertionDone==1){
-                 jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, null);
-            }else{
+
+            if (insertionDone == 1) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, null);
+            }
+            else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert receiver's data", "Error in insertion mysql", null);
             }
-        }else{
-              jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot POST /bloodstock", "Exception in establishing connection !", null);
         }
-        
-        out.println(gson.toJson(jsonRes));
-        out.flush();
+        else {
+            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot POST /bloodstock", "Exception in establishing connection !", null);
+        }
+
+        writer.println(gson.toJson(jsonRes));
+        writer.flush();
     }
 
-    
-    
 }

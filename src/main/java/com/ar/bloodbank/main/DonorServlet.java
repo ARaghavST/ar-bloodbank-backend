@@ -1,119 +1,61 @@
-//package com.ar.bloodbank.main;
-//
-//import com.ar.bloodbank.connections.DatabaseConnect;
-//import com.ar.bloodbank.constants.MysqlConnectionObject;
-//import com.ar.bloodbank.constants.ReturnObject;
-//import com.ar.bloodbank.functions.Sqlfunction;
-//import com.ar.bloodbank.main.resources.DonorResource;
-//import com.ar.bloodbank.main.resources.JsonResponse;
-//import com.ar.bloodbank.main.resources.UserResource;
-//import com.google.gson.Gson;
-//import jakarta.servlet.ServletException;
-//import jakarta.servlet.annotation.WebServlet;
-//import jakarta.servlet.http.HttpServlet;
-//import jakarta.servlet.http.HttpServletResponse;
-//import java.io.BufferedReader;
-//import java.io.IOException;
-//import java.io.PrintWriter;
-//import java.util.List;
-//
-//@WebServlet(name = "DonorServlet", urlPatterns = {"/donor"})
-//public class DonorServlet extends HttpServlet {
-//
-//    @Override
-//    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//
-//        response.setContentType("application/json");
-//        DatabaseConnect db = new DatabaseConnect();
-//
-//        JsonResponse res;
-//        // GSON is used to convert Java objects into JSON ( Javascript ) objects
-//        Gson gson = new Gson();
-//        PrintWriter out = response.getWriter();
-//        MysqlConnectionObject mysql = db.ConnectAndReturnConnection();
-//
-////        Map<String, String> filters = new HashMap<>();
-////
-////        filters.put("search", request.getParameter("search"));
-//        if (mysql.connection == null) {
-//            res = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "MySQL Connection cannot be established", "Connection is null", null);
-//        } else {
-//            Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
-//
-//            // GetDonors is returning an object of type (class) ReturnObject
-//            ReturnObject ret = donorFunction.GetDonors();
-//
-////            ReturnObject ret = donorFunction.GetDonors(filters);
-//            // ret.getObject returns an Object , we typecast it to List<DonorResource>
-//            List<DonorResource> donorsList = (List<DonorResource>) ret.getObject();
-//
-//            if (!ret.getError().equals("")) {
-//                res = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot fetch donors", ret.getError(), null);
-//            } else {
-//                res = new JsonResponse(HttpServletResponse.SC_OK, "Donors fetched successfully", ret.getError(), donorsList);
-//            }
-//        }
-//
-//        String resJon = gson.toJson(res);
-//
-//        out.println(resJon);
-//        out.flush();
-//    }
-//
-//    // Below doPost will be used for signup of new user
-//    @Override
-//    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-//            throws ServletException, IOException {
-//
-//        // We need to take the input (body) from request
-//        // We need convert it into string
-//        // this below lines from 61 -> 67 converts the json body sent from (signup form) request body into stringbuilder
-//        StringBuilder sb = new StringBuilder();
-//        try (BufferedReader reader = request.getReader()) {
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                sb.append(line);
-//            }
-//        }
-//
-//        // this converts stringbuilder into JAVA string
-//        String requestBody = sb.toString();
-//
-//        JsonResponse res;
-//        // "gson" object converts JAVA string into Java object
-//        Gson gson = new Gson();
-//
-//        // user is POJO (Plain Old Java Object)
-//        // fromJson function converts string into Java objects
-//        UserResource user = gson.fromJson(requestBody, UserResource.class);
-//
-//        DatabaseConnect db = new DatabaseConnect();
-//
-//        MysqlConnectionObject mysql = db.ConnectAndReturnConnection();
-//
-//        if (mysql.connection == null) {
-//            res = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "MySQL Connection cannot be established", "Connection is null", null);
-//        } else {
-//            Sqlfunction donorFunction = new Sqlfunction(mysql.connection);
-//            ReturnObject ret = donorFunction.AddNewUserMySQL(user);
-//
-//            if (!ret.getError().equals("")) {
-//                res = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert new user", ret.getError(), null);
-//            } else {
-//                res = new JsonResponse(HttpServletResponse.SC_OK, "User inserted successfully", ret.getError(), null);
-//            }
-//
-//        }
-//
-//        response.setContentType("application/json");
-//
-//        // Write JSON response to output stream
-//        PrintWriter out = response.getWriter();
-//
-//        String resJson = gson.toJson(res);
-//        out.println(resJson);
-//        out.flush();
-//
-//    }
-//
-//}
+package com.ar.bloodbank.main;
+
+import com.ar.bloodbank.dbconnection.DatabaseConnect;
+import com.ar.bloodbank.functions.MysqlFunctions;
+import com.ar.bloodbank.resources.DonorResource;
+import com.ar.bloodbank.resources.JsonResponse;
+import com.google.gson.Gson;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+
+@WebServlet(name = "DonorServlet", urlPatterns = {"/donor"})
+public class DonorServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        JsonResponse jsonRes = null;
+
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+
+        DatabaseConnect db = new DatabaseConnect();
+        Connection connection = db.ConnectAndReturnConnection();
+
+        Gson gson = new Gson();
+
+        if (connection != null) {
+
+            MysqlFunctions mysql = new MysqlFunctions(connection);
+
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+
+            DonorResource signupData = gson.fromJson(sb.toString(), DonorResource.class);
+
+            if (mysql.InsertDonorData(signupData)) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
+            }
+            else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);
+            }
+        }
+        else {
+            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor", "Exception in establishing connection !", null);
+        }
+
+        String responseInJsonString = gson.toJson(jsonRes);
+        writer.println(responseInJsonString);
+    }
+}

@@ -1,6 +1,6 @@
 package com.ar.bloodbank.main;
 
-import com.ar.bloodbank.connections.DatabaseConnect;
+import com.ar.bloodbank.dbconnection.DatabaseConnect;
 import com.ar.bloodbank.functions.MysqlFunctions;
 import com.ar.bloodbank.resources.DonorResource;
 import com.ar.bloodbank.resources.JsonResponse;
@@ -32,7 +32,7 @@ public class AdminServlet extends HttpServlet {
 
         response.setContentType("application/json");
 
-        PrintWriter out = response.getWriter();
+        PrintWriter writer = response.getWriter();
 
         DatabaseConnect db = new DatabaseConnect(); // connecting to mysql cloud (google cloud sql)
         Connection connection = db.ConnectAndReturnConnection();
@@ -109,8 +109,8 @@ public class AdminServlet extends HttpServlet {
         Gson gson = new Gson();
         String responseInString = gson.toJson(jsonRes);
         // OR
-        // out.println(new Gson().toJson(jsonRes));
-        out.println(responseInString);
+        // writer.println(new Gson().toJson(jsonRes));
+        writer.println(responseInString);
 
     }
 }
