@@ -1,7 +1,9 @@
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\AppContextListener.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\dbconnection\DatabaseConnect.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\functions\MysqlFunctions.java
+C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\helpers\EmailFunctions.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\helpers\PasswordEncryptionWithAES.java
+C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\helpers\RandomStringGenerator.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\main\AdminServlet.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\main\BloodStockServlet.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\main\CorsFilter.java
@@ -16,4 +18,3 @@ C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodba
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\resources\JsonResponse.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\resources\ReceiverResource.java
 C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\resources\UpdateBodyResource.java
-C:\Users\hp\Documents\NetBeansProjects\ar-bloodbank\src\main\java\com\ar\bloodbank\resources\UserResource.java

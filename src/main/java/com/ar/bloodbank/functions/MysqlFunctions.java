@@ -1,5 +1,8 @@
 package com.ar.bloodbank.functions;
 
+import com.ar.bloodbank.helpers.EmailFunctions;
+import com.ar.bloodbank.helpers.PasswordEncryptionWithAES;
+import com.ar.bloodbank.helpers.RandomStringGenerator;
 import com.ar.bloodbank.resources.DonorResource;
 import com.ar.bloodbank.resources.ReceiverResource;
 import java.sql.Connection;
@@ -10,6 +13,7 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import javax.crypto.SecretKey;
 
 public class MysqlFunctions {
 
@@ -302,7 +306,7 @@ public class MysqlFunctions {
      *
      */
     public boolean UpdateDonorStatus(int id) {
-        String updateQuery = "UPDATE donors SET status = 1 , reg_on = ?, availability = 'YES' WHERE id = ?;";
+        String updateQuery = "UPDATE donors SET status = 1 , reg_on = ?, availability = 'YES',password = ? WHERE id = ?;";
 
         try {
             PreparedStatement receiverUpdateStatement = this.connection.prepareStatement(updateQuery);
@@ -313,17 +317,48 @@ public class MysqlFunctions {
             // Format and print it
             String registeredOn = now.format(formatter);
 
+            SecretKey secretKey = PasswordEncryptionWithAES.generateKey();
+            // new PasswordEncryptionWithAES().doEncrypt() -> 1 line way to call doEncrypt function contained in PasswordEncryptionWithAES class, with parameters string, and secretKey
+            // new RandomStringGenerator().generatePassword(10), secretKey) -> 1 line way to call generatePassword function contained in RandomStringGenerator class, length of string
+            String generatedPassword = new PasswordEncryptionWithAES().doEncrypt(new RandomStringGenerator().generatePassword(10), secretKey);
+
             receiverUpdateStatement.setString(1, registeredOn);
-            receiverUpdateStatement.setInt(2, id);
+            receiverUpdateStatement.setString(2, generatedPassword);
+            receiverUpdateStatement.setInt(3, id);
 
             int isUpdated = receiverUpdateStatement.executeUpdate();
 
-            if (isUpdated > 0) {
-                return true;
-            }
+            if (isUpdated == 1) {
 
-        } catch (SQLException ex) {
-            System.out.println("Exception occured : " + ex.getMessage());
+                String getEmailQuery = "SELECT email,name FROM donors WHERE id = " + id;
+
+                // Statement / PreparedStatement classes are used to EXECUTE MySQL queries in JAVA
+                Statement getEmailStatement = this.connection.createStatement();
+
+                ResultSet result = getEmailStatement.executeQuery(getEmailQuery);
+
+                String targetEmail = "";
+                String targetName = "";
+                String originalPassword = new PasswordEncryptionWithAES().doDecrypt(generatedPassword, secretKey);
+
+                while (result.next()) {
+                    targetEmail = result.getString("email");
+                    targetName = result.getString("name");
+                }
+
+                EmailFunctions emailObject = new EmailFunctions();
+                // calling send email function
+                boolean isMailSent = emailObject.sendEmail(targetEmail, targetName, originalPassword);
+
+                if (isMailSent) {
+                    return true;
+                }
+                System.out.println("Email not sent.");
+
+            }
+            return false;
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
         }
         return false;
     }

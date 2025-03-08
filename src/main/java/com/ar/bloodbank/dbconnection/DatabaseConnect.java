@@ -20,10 +20,6 @@ public class DatabaseConnect {
         PASSWORD = dotenv.get("MYSQL_PASSWORD");
     }
 
-    ;
-
-
-
     public Connection ConnectAndReturnConnection() {
         Connection connection = null;
 
