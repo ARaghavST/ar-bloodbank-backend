@@ -11,6 +11,7 @@ com\ar\bloodbank\resources\AdminSubmitResource.class
 com\ar\bloodbank\helpers\RandomStringGenerator.class
 com\ar\bloodbank\main\login\AdminLoginServlet.class
 com\ar\bloodbank\resources\DonorResource.class
+com\ar\bloodbank\resources\ReturnObject.class
 com\ar\bloodbank\main\BloodStockServlet.class
 com\ar\bloodbank\helpers\EmailFunctions$1.class
 com\ar\bloodbank\main\AdminServlet.class

@@ -2,21 +2,15 @@ package com.ar.bloodbank.helpers;
 
 import java.util.Base64;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 public class PasswordEncryptionWithAES {
 
     // Generate a secret key
-    public static SecretKey generateKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-            keyGen.init(128); // AES-128
-            return keyGen.generateKey();
-        } catch (Exception e) {
-
-        }
-        return null;
+    public static SecretKey generateKey(String salt) {
+        byte[] keyBytes = salt.getBytes();
+        return new SecretKeySpec(keyBytes, 0, 16, "AES");
     }
 
     // Encrypt the password
@@ -38,6 +32,7 @@ public class PasswordEncryptionWithAES {
     public String doEncrypt(String password, SecretKey key) {
         String encryptedPassword = "";
         try {
+
             encryptedPassword = this.encrypt(password, key);
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

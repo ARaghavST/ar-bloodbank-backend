@@ -5,6 +5,8 @@ import com.ar.bloodbank.helpers.PasswordEncryptionWithAES;
 import com.ar.bloodbank.helpers.RandomStringGenerator;
 import com.ar.bloodbank.resources.DonorResource;
 import com.ar.bloodbank.resources.ReceiverResource;
+import com.ar.bloodbank.resources.ReturnObject;
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,8 +20,10 @@ import javax.crypto.SecretKey;
 public class MysqlFunctions {
 
     Connection connection;
+    Dotenv dotenv;
 
     public MysqlFunctions(Connection mysqlConnection) {
+        this.dotenv = Dotenv.load();
         this.connection = mysqlConnection;
     }
 
@@ -317,7 +321,9 @@ public class MysqlFunctions {
             // Format and print it
             String registeredOn = now.format(formatter);
 
-            SecretKey secretKey = PasswordEncryptionWithAES.generateKey();
+            Dotenv dotenv = Dotenv.load();
+            String secretSalt = dotenv.get("ENCRYPTION_SALT");
+            SecretKey secretKey = PasswordEncryptionWithAES.generateKey(secretSalt);
             // new PasswordEncryptionWithAES().doEncrypt() -> 1 line way to call doEncrypt function contained in PasswordEncryptionWithAES class, with parameters string, and secretKey
             // new RandomStringGenerator().generatePassword(10), secretKey) -> 1 line way to call generatePassword function contained in RandomStringGenerator class, length of string
             String generatedPassword = new PasswordEncryptionWithAES().doEncrypt(new RandomStringGenerator().generatePassword(10), secretKey);
@@ -369,7 +375,7 @@ public class MysqlFunctions {
      *
      * @param signupData
      *
-     * @return
+     * @return true/false
      *
      */
     public boolean InsertDonorData(DonorResource data) {
@@ -399,5 +405,134 @@ public class MysqlFunctions {
             System.out.println("Exception occured : " + e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * This function will check whether we have a donor with given email and
+     * password ( login details )
+     *
+     * @param email
+     * @param password
+     *
+     * @return object containing data and error
+     *
+     */
+    public ReturnObject CheckLoginDonor(String email, String password) {
+
+        String getPassQuery = "SELECT password from donors where email = ?";
+
+        ReturnObject returnObj = new ReturnObject();
+
+        try {
+
+            PreparedStatement getPassStatement = this.connection.prepareStatement(getPassQuery);
+
+            getPassStatement.setString(1, email);
+            ResultSet result = getPassStatement.executeQuery();
+
+            String encryptedPassword = "";
+
+            while (result.next()) {
+                encryptedPassword = result.getString("password");
+            }
+
+            Dotenv dotenv = Dotenv.load();
+            String salt = dotenv.get("ENCRYPTION_SALT");
+
+            SecretKey key = PasswordEncryptionWithAES.generateKey(salt);
+
+            String decryptedPassword = new PasswordEncryptionWithAES().doDecrypt(encryptedPassword, key);
+
+            if (decryptedPassword.equals(password)) {
+                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on FROM donors WHERE email = ? ";
+
+                PreparedStatement getDonorDetailsStatement = this.connection.prepareStatement(getDonorQuery);
+
+                getDonorDetailsStatement.setString(1, email);
+
+                ResultSet donorResult = getDonorDetailsStatement.executeQuery();
+
+                DonorResource donor = null;
+
+                while (donorResult.next()) {
+                    int id = donorResult.getInt("id");
+                    String name = donorResult.getString("name");
+                    String dob = donorResult.getString("dob");
+                    String gender = donorResult.getString("gender");
+                    String blood_group = donorResult.getString("blood_group");
+                    String phno = donorResult.getString("phno");
+                    String last_donation = donorResult.getString("last_donation");
+                    int e_ready = donorResult.getInt("e_ready");
+                    String avail = donorResult.getString("availability");
+                    String reg_on = donorResult.getString("reg_on");
+
+                    donor = new DonorResource(id, e_ready, 0, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on);
+
+                }
+
+                returnObj.data = donor;
+                returnObj.error = null;
+
+            }
+            else {
+                returnObj.data = null;
+                returnObj.error = "WRONG PASSWORD";
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+            returnObj.data = null;
+            returnObj.error = "EXCEPTION";
+        }
+
+        return returnObj;
+    }
+
+    /**
+     * This function will update donor details for fields ->
+     * (password,availability,e_ready) and it's value in database
+     *
+     * @param toUpdateBody
+     * @param targetId
+     *
+     * @param Map<String,String>
+     * @return true/false stating successful updation
+     *
+     *
+     */
+    public boolean UpdateDonorDetails(Map<String, String> toUpdateBody, int targetId) {
+
+        String updateQuery = "";
+
+        if (toUpdateBody.containsKey("password")) {
+            String updatedPassword = toUpdateBody.get("password");
+            String salt = dotenv.get("ENCRYPTION_SALT");
+            SecretKey key = PasswordEncryptionWithAES.generateKey(salt);
+            updateQuery = "UPDATE donors SET password = '" + new PasswordEncryptionWithAES().doEncrypt(updatedPassword, key) + "' WHERE id = " + targetId;
+
+        }
+        else if (toUpdateBody.containsKey("availability")) {
+            updateQuery = "UPDATE donors SET availability = '" + toUpdateBody.get("availability") + "' WHERE id = " + targetId;
+        }
+        else if (toUpdateBody.containsKey("e_ready")) {
+            updateQuery = "UPDATE donors SET e_ready = " + toUpdateBody.get("e_ready") + " WHERE id = " + targetId;
+        }
+
+        try {
+
+            Statement updateStatement = this.connection.createStatement();
+
+            int updatedCount = updateStatement.executeUpdate(updateQuery);
+
+            if (updatedCount == 1) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+
+        return false;
+
     }
 }
