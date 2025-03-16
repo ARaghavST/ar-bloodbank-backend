@@ -154,7 +154,7 @@ public class MysqlFunctions {
         }
 
         if (donorFiltersMap.containsKey("status")) {
-            usersQueryString = usersQueryString + " AND status = " + Integer.parseInt(donorFiltersMap.get("status"));
+            usersQueryString = usersQueryString + " AND status = " + donorFiltersMap.get("status");
         }
 
         if (donorFiltersMap.containsKey("emergency")) {
@@ -392,7 +392,7 @@ public class MysqlFunctions {
             insertDonorStatement.setString(5, data.email);
             insertDonorStatement.setString(6, data.phno);
             insertDonorStatement.setInt(7, data.e_ready);
-            insertDonorStatement.setString(8, "NO");
+            insertDonorStatement.setString(8, "YES");
             insertDonorStatement.setInt(9, 0);
 
             int isInserted = insertDonorStatement.executeUpdate();
@@ -534,5 +534,43 @@ public class MysqlFunctions {
 
         return false;
 
+    }
+
+    /**
+     * This function will give donor's donation history
+     *
+     * @param donorId
+     *
+     * @return list of map of donors donation record
+     *
+     *
+     */
+    public List<Map<String, String>> GetDonationHistoryForDonorById(String donorId) {
+
+        String getDonationsQuery = "SELECT donations.id as donorid,donations.quantity as amount,donations.donation_time as donated_time,donations.weight as weight from donations JOIN donors ON donations.donor_id = donors.id where donors.id = " + donorId;
+
+        List<Map<String, String>> donationHistoryList = new ArrayList<>();
+
+        try {
+            Statement donationsHistoryStatement = this.connection.createStatement();
+
+            ResultSet result = donationsHistoryStatement.executeQuery(getDonationsQuery);
+
+            while (result.next()) {
+                Map<String, String> row = new HashMap<>();
+                row.put("id", result.getString("donorid"));
+                row.put("quantity", result.getString("amount"));
+                row.put("donation_time", result.getString("donated_time"));
+                row.put("weight", result.getString("weight"));
+
+                donationHistoryList.add(row);
+            }
+
+            return donationHistoryList;
+
+        } catch (Exception e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+        return null;
     }
 }

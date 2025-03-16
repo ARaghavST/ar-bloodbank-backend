@@ -15,9 +15,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 
-@WebServlet(name = "DonorServlet", urlPatterns = {"/donor"})
+@WebServlet(name = "DonorServlet", urlPatterns = {"/donor/*"})
 public class DonorServlet extends HttpServlet {
 
     @Override
@@ -41,6 +42,7 @@ public class DonorServlet extends HttpServlet {
             }
         }
 
+        // check for null id and return error response if not provided
         int targetId = Integer.parseInt(request.getParameter("id"));
 
         Map<String, String> toUpdateDetailMap = gson.fromJson(sb.toString(), Map.class);
@@ -72,10 +74,96 @@ public class DonorServlet extends HttpServlet {
 
     }
 
-    // In this doGet, we will be handling donor login
+    // In this doGet, we will be handling donor signup (new donor will be added in db)
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        JsonResponse jsonRes = null;
+
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+
+        DatabaseConnect db = new DatabaseConnect();
+        Connection connection = db.ConnectAndReturnConnection();
+
+        Gson gson = new Gson();
+
+        String path = request.getPathInfo();
+
+        if (path.equals("/login")) {
+
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+
+            Map<String, String> bodyMap = gson.fromJson(sb.toString(), Map.class);
+
+            if (bodyMap == null) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Missing login details", null);
+            }
+            else if (!bodyMap.containsKey("email") && !bodyMap.containsKey("password")) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Either email / password is empty", null);
+            }
+            else {
+                if (connection != null) {
+
+                    MysqlFunctions mysql = new MysqlFunctions(connection);
+
+                    // here 
+                    ReturnObject returnObj = mysql.CheckLoginDonor(bodyMap.get("email"), bodyMap.get("password"));
+
+                    if (returnObj.error != null) {
+                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Cannot perform login!", returnObj.error, null);
+                    }
+                    else {
+                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor logged in successfully!", null, returnObj);
+                    }
+                }
+                else {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET at /donor", "Exception in establishing connection !", null);
+                }
+            }
+
+            String responseInJsonString = gson.toJson(jsonRes);
+
+            writer.println(responseInJsonString);
+        }
+        else {
+            if (connection != null) {
+
+                MysqlFunctions mysql = new MysqlFunctions(connection);
+
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = request.getReader()) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
+
+                DonorResource signupData = gson.fromJson(sb.toString(), DonorResource.class);
+
+                if (mysql.InsertDonorData(signupData)) {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
+                }
+                else {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);
+                }
+            }
+            else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor", "Exception in establishing connection !", null);
+            }
+
+            String responseInJsonString = gson.toJson(jsonRes);
+            writer.println(responseInJsonString);
+        }
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
         JsonResponse jsonRes = null;
 
         response.setContentType("application/json");
@@ -93,79 +181,30 @@ public class DonorServlet extends HttpServlet {
                 sb.append(line);
             }
         }
+        // sb will contain something like this "{\"id\":\"12\"}"
 
-        Map<String, String> bodyMap = gson.fromJson(sb.toString(), Map.class);
-
-        if (bodyMap == null) {
-            jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Missing login details", null);
-        }
-        else if (!bodyMap.containsKey("email") && !bodyMap.containsKey("password")) {
-            jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Either email / password is empty", null);
-        }
-        else {
-            if (connection != null) {
-
-                MysqlFunctions mysql = new MysqlFunctions(connection);
-
-                // here 
-                ReturnObject returnObj = mysql.CheckLoginDonor(bodyMap.get("email"), bodyMap.get("password"));
-
-                if (returnObj.error != null) {
-                    jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Cannot perform login!", returnObj.error, null);
-                }
-                else {
-                    jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor logged in successfully!", null, returnObj);
-                }
-            }
-            else {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET at /donor", "Exception in establishing connection !", null);
-            }
-        }
-
-        String responseInJsonString = gson.toJson(jsonRes);
-
-        writer.println(responseInJsonString);
-    }
-
-    // In this doGet, we will be handling donor signup (new donor will be added in db)
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        JsonResponse jsonRes = null;
-
-        response.setContentType("application/json");
-        PrintWriter writer = response.getWriter();
-
-        DatabaseConnect db = new DatabaseConnect();
-        Connection connection = db.ConnectAndReturnConnection();
-
-        Gson gson = new Gson();
+        Map<String, String> donorIdMap = gson.fromJson(sb.toString(), Map.class);
 
         if (connection != null) {
-
             MysqlFunctions mysql = new MysqlFunctions(connection);
 
-            StringBuilder sb = new StringBuilder();
-            try (BufferedReader reader = request.getReader()) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-            }
+            List<Map<String, String>> donationsHistory = mysql.GetDonationHistoryForDonorById(donorIdMap.get("id"));
 
-            DonorResource signupData = gson.fromJson(sb.toString(), DonorResource.class);
-
-            if (mysql.InsertDonorData(signupData)) {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
+            if (donationsHistory == null) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donations history", "Exception occured! Please check logs in server", null);
             }
             else {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Success", null, donationsHistory);
             }
+
         }
         else {
-            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor", "Exception in establishing connection !", null);
+            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET /donor/*", "Exception in establishing connection !", null);
         }
 
         String responseInJsonString = gson.toJson(jsonRes);
         writer.println(responseInJsonString);
+
     }
+
 }
