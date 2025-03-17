@@ -174,21 +174,12 @@ public class DonorServlet extends HttpServlet {
 
         Gson gson = new Gson();
 
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        }
-        // sb will contain something like this "{\"id\":\"12\"}"
-
-        Map<String, String> donorIdMap = gson.fromJson(sb.toString(), Map.class);
+        String id = request.getParameter("id");
 
         if (connection != null) {
             MysqlFunctions mysql = new MysqlFunctions(connection);
 
-            List<Map<String, String>> donationsHistory = mysql.GetDonationHistoryForDonorById(donorIdMap.get("id"));
+            List<Map<String, String>> donationsHistory = mysql.GetDonationHistoryForDonorById(id);
 
             if (donationsHistory == null) {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donations history", "Exception occured! Please check logs in server", null);
