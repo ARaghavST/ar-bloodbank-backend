@@ -147,7 +147,7 @@ public class MysqlFunctions {
     }
 
     public Object GetDonorsByFilters(Map<String, String> donorFiltersMap) {
-        String usersQueryString = "SELECT * FROM donors WHERE availability = 'YES'";
+        String usersQueryString = "SELECT * FROM donors WHERE availability IN ('YES','NO')";
 
         if (donorFiltersMap.containsKey("name")) {
             usersQueryString = usersQueryString + " AND name LIKE '" + donorFiltersMap.get("name") + "%'";
