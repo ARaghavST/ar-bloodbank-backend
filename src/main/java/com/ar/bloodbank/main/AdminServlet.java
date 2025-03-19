@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -75,8 +76,7 @@ public class AdminServlet extends HttpServlet {
                     if (mysql.GetDonorsByFilters(donorsFilter) != null) {
                         donorsList = (List<DonorResource>) mysql.GetDonorsByFilters(donorsFilter);
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donors fetched successfully!", null, donorsList);
-                    }
-                    else {
+                    } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donors", "Exception occured! Please check logs in server", null);
                     }
 
@@ -89,8 +89,7 @@ public class AdminServlet extends HttpServlet {
                     if (mysql.GetPendingReceivers() != null) {
                         pendingReceiversList = (List<ReceiverResource>) mysql.GetPendingReceivers();
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Receivers fetched successfully!", null, pendingReceiversList);
-                    }
-                    else {
+                    } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch receivers", "Exception occured! Please check logs in server", null);
                     }
 
@@ -100,8 +99,7 @@ public class AdminServlet extends HttpServlet {
                     break;
             }
 
-        }
-        else {
+        } else {
             // from here we will send err message in response when connection is null
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET at /admin", "Exception in establishing connection !", null);
         }
@@ -112,5 +110,45 @@ public class AdminServlet extends HttpServlet {
         // writer.println(new Gson().toJson(jsonRes));
         writer.println(responseInString);
 
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        JsonResponse jsonRes = null;
+
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+
+        Gson gson = new Gson();
+
+        DatabaseConnect db = new DatabaseConnect(); // connecting to mysql cloud (google cloud sql)
+        Connection connection = db.ConnectAndReturnConnection();
+
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+
+        if (connection != null) {
+            Map<String, String> adminDetails = gson.fromJson(sb.toString(), Map.class);
+            MysqlFunctions mysql = new MysqlFunctions(connection);
+
+            if (mysql.ValidateAdminLogin(adminDetails)) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Admin login success", null, 1);
+            } else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot peform login.Check logs in server", "Admin login error in mysql", null);
+            }
+
+        } else {
+            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /admin", "Exception in establishing connection !", null);
+        }
+
+        String responseInString = gson.toJson(jsonRes);
+        // OR
+        // writer.println(new Gson().toJson(jsonRes));
+        writer.println(responseInString);
     }
 }

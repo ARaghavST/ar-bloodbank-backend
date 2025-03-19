@@ -160,7 +160,7 @@ public class MysqlFunctions {
         if (donorFiltersMap.containsKey("emergency")) {
             usersQueryString = usersQueryString + " AND e_ready = 1";
         }
-        // usersQueryString will now contain the sql query 
+        // usersQueryString will now contain the sql query
 
         try {
             // Below line is used to get an object of mysql statement which will help
@@ -473,8 +473,7 @@ public class MysqlFunctions {
                 returnObj.data = donor;
                 returnObj.error = null;
 
-            }
-            else {
+            } else {
                 returnObj.data = null;
                 returnObj.error = "WRONG PASSWORD";
             }
@@ -510,11 +509,9 @@ public class MysqlFunctions {
             SecretKey key = PasswordEncryptionWithAES.generateKey(salt);
             updateQuery = "UPDATE donors SET password = '" + new PasswordEncryptionWithAES().doEncrypt(updatedPassword, key) + "' WHERE id = " + targetId;
 
-        }
-        else if (toUpdateBody.containsKey("availability")) {
+        } else if (toUpdateBody.containsKey("availability")) {
             updateQuery = "UPDATE donors SET availability = '" + toUpdateBody.get("availability") + "' WHERE id = " + targetId;
-        }
-        else if (toUpdateBody.containsKey("e_ready")) {
+        } else if (toUpdateBody.containsKey("e_ready")) {
             updateQuery = "UPDATE donors SET e_ready = " + toUpdateBody.get("e_ready") + " WHERE id = " + targetId;
         }
 
@@ -572,5 +569,30 @@ public class MysqlFunctions {
             System.out.println("Exception occured : " + e.getMessage());
         }
         return null;
+    }
+
+    public boolean ValidateAdminLogin(Map<String, String> adminDetails) {
+
+        String checkQuery = "SELECT count(*) AS count FROM admin WHERE email = ? AND password = ?";
+
+        try {
+            PreparedStatement adminValidateStatement = this.connection.prepareStatement(checkQuery);
+
+            adminValidateStatement.setString(1, adminDetails.get("email"));
+            adminValidateStatement.setString(2, adminDetails.get("password"));
+
+            ResultSet adminCountResult = adminValidateStatement.executeQuery();
+
+            while (adminCountResult.next()) {
+                int count = adminCountResult.getShort("count");
+
+                if (count == 1) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+        return false;
     }
 }
