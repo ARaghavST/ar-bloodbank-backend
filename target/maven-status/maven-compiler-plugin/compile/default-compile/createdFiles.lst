@@ -19,4 +19,3 @@ AppContextListener.class
 com\ar\bloodbank\functions\MysqlFunctions.class
 com\ar\bloodbank\resources\UpdateBodyResource.class
 com\ar\bloodbank\main\DonorServlet.class
-com\ar\bloodbank\main\RHistoryServlet.class

@@ -84,11 +84,34 @@ public class AdminServlet extends HttpServlet {
                     break;
                 case "receivers":
 
-                    List<ReceiverResource> pendingReceiversList = null;
+                    List<ReceiverResource> receiversList = null;
 
-                    if (mysql.GetPendingReceivers() != null) {
-                        pendingReceiversList = (List<ReceiverResource>) mysql.GetPendingReceivers();
-                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Receivers fetched successfully!", null, pendingReceiversList);
+                    Map<String, String> filters = new HashMap();
+
+                    String name = (request.getParameter("name") != null) ? request.getParameter("name") : null;
+                    String req_date_range = (request.getParameter("req_date_range") != null) ? request.getParameter("req_date_range") : null;
+                    String status = (request.getParameter("status") != null) ? request.getParameter("status") : null;
+                    String bloodType = (request.getParameter("bloodtype") != null) ? request.getParameter("bloodtype") : null;
+
+                    if (name != null && !name.equals("")) {
+                        filters.put("name", name);
+                    }
+
+                    if (req_date_range != null && !req_date_range.equals("")) {
+                        filters.put("req_date", req_date_range);
+                    }
+
+                    if (status != null && !status.equals("")) {
+                        filters.put("status", status);
+                    }
+
+                    if (bloodType != null && !bloodType.equals("")) {
+                        filters.put("bloodType", bloodType);
+                    }
+
+                    if (mysql.GetReceivers(filters) != null) {
+                        receiversList = (List<ReceiverResource>) mysql.GetReceivers(filters);
+                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Receivers fetched successfully!", null, receiversList);
                     } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch receivers", "Exception occured! Please check logs in server", null);
                     }

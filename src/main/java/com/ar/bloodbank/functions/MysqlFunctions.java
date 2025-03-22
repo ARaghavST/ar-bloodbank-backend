@@ -197,14 +197,40 @@ public class MysqlFunctions {
         return null;
     }
 
-    public Object GetPendingReceivers() {
+    public Object GetReceivers(Map<String, String> filters) {
 
-        String pendingReceiversQuery = "SELECT * from receiver WHERE status = 0;";
+        String receiversQuery = "SELECT * from receiver WHERE status IN (0,1)";
+
+        if (filters.containsKey("name")) {
+            receiversQuery += " AND name LIKE '%" + filters.get("name") + "%'";
+        }
+
+        if (filters.containsKey("req_date")) {
+
+            String[] splitDates = filters.get("req_date").split(",");
+
+            receiversQuery += " AND req_date BETWEEN '" + splitDates[0] + "' AND '" + splitDates[1] + "'";
+        }
+
+        if (filters.containsKey("status")) {
+            receiversQuery += " AND status = " + filters.get("status");
+        }
+
+        if (filters.containsKey("bloodType")) {
+            String InQuery = "";
+            String[] bloodGroups = filters.get("bloodType").split(",");
+
+            for (int i = 0; i < bloodGroups.length; i++) {
+                InQuery += "'" + bloodGroups[i] + "',";
+            }
+            receiversQuery += " AND bg_needed IN (" + InQuery.substring(0, InQuery.length() - 1) + ")";
+        }
 
         try {
+
             Statement mysqlConvStatementObject = this.connection.createStatement();
 
-            ResultSet pendingReceiversResult = mysqlConvStatementObject.executeQuery(pendingReceiversQuery);
+            ResultSet pendingReceiversResult = mysqlConvStatementObject.executeQuery(receiversQuery);
             List<ReceiverResource> receiversList = new ArrayList();
 
             while (pendingReceiversResult.next()) {
