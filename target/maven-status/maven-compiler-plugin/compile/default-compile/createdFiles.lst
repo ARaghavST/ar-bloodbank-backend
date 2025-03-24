@@ -4,12 +4,10 @@ com\ar\bloodbank\dbconnection\DatabaseConnect.class
 com\ar\bloodbank\helpers\PasswordEncryptionWithAES.class
 com\ar\bloodbank\main\UpdateStatusServlet.class
 com\ar\bloodbank\helpers\EmailFunctions.class
-com\ar\bloodbank\main\login\DonorLoginServlet.class
 com\ar\bloodbank\resources\JsonResponse.class
 com\ar\bloodbank\main\CorsFilter.class
 com\ar\bloodbank\resources\AdminSubmitResource.class
 com\ar\bloodbank\helpers\RandomStringGenerator.class
-com\ar\bloodbank\main\login\AdminLoginServlet.class
 com\ar\bloodbank\resources\DonorResource.class
 com\ar\bloodbank\resources\ReturnObject.class
 com\ar\bloodbank\main\BloodStockServlet.class

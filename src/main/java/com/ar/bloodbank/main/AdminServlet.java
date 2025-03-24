@@ -54,13 +54,14 @@ public class AdminServlet extends HttpServlet {
 
                     donorsFilter = new HashMap<>();
 
-                    String nameFilter = (request.getParameter("name") != null) ? request.getParameter("name") : "";
+                    String nameFilter = (request.getParameter("name") != null) ? request.getParameter("name") : null;
                     // request will always contain status as 0 by default
                     int statusFilter = (request.getParameter("status") != null) ? Integer.parseInt(request.getParameter("status")) : -1;
-                    String emergencyFilter = (request.getParameter("emergency") != null) ? request.getParameter("emergency") : "NA";
+                    String donor_req_date_range = (request.getParameter("req_date_range") != null) ? request.getParameter("req_date_range") : null;
+                    String emergencyFilter = (request.getParameter("emergency") != null) ? request.getParameter("emergency") : null;
 
                     // Add name filter in map, only if it is provided in URL query OR selected
-                    if (nameFilter != "") {
+                    if (nameFilter != null && !nameFilter.equals("")) {
                         donorsFilter.put("name", nameFilter);
                     }
                     // Add status filter in map, only if it is provided in URL query OR selected
@@ -68,8 +69,12 @@ public class AdminServlet extends HttpServlet {
                         donorsFilter.put("status", String.valueOf(statusFilter));
                     }
                     // Add emergency filter in map, only if it is provided in URL query OR selected
-                    if (emergencyFilter != "NA") {
+                    if (emergencyFilter != null && !emergencyFilter.equals("0") && !emergencyFilter.equals("")) {
                         donorsFilter.put("emergency", emergencyFilter);
+                    }
+
+                    if (donor_req_date_range != null && !donor_req_date_range.equals("")) {
+                        donorsFilter.put("req_date_range", donor_req_date_range);
                     }
 
                     List<DonorResource> donorsList = null;
@@ -92,7 +97,6 @@ public class AdminServlet extends HttpServlet {
                     String req_date_range = (request.getParameter("req_date_range") != null) ? request.getParameter("req_date_range") : null;
                     String status = (request.getParameter("status") != null) ? request.getParameter("status") : null;
                     String bloodType = (request.getParameter("bloodtype") != null) ? request.getParameter("bloodtype") : null;
-
                     if (name != null && !name.equals("")) {
                         filters.put("name", name);
                     }

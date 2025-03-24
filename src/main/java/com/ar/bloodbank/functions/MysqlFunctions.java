@@ -157,10 +157,17 @@ public class MysqlFunctions {
             usersQueryString = usersQueryString + " AND status = " + donorFiltersMap.get("status");
         }
 
+        if (donorFiltersMap.containsKey("req_date_range")) {
+            String[] dateArray = donorFiltersMap.get("req_date_range").split(",");
+            usersQueryString = usersQueryString + " AND req_on BETWEEN '" + dateArray[0] + "' AND '" + dateArray[1] + "'";
+        }
+
         if (donorFiltersMap.containsKey("emergency")) {
             usersQueryString = usersQueryString + " AND e_ready = 1";
         }
         // usersQueryString will now contain the sql query
+
+        System.out.println(usersQueryString);
 
         try {
             // Below line is used to get an object of mysql statement which will help
@@ -185,8 +192,9 @@ public class MysqlFunctions {
                 String availability = usersResultSet.getString("availability");
                 int e_ready = usersResultSet.getInt("e_ready");
                 int status = usersResultSet.getInt("status");
+                String req_on = usersResultSet.getString("req_on");
 
-                DonorResource donor = new DonorResource(id, e_ready, status, name, dob, gender, blood_group, email, phno, last_donation, availability, reg_on);
+                DonorResource donor = new DonorResource(id, e_ready, status, name, dob, gender, blood_group, email, phno, last_donation, availability, reg_on, req_on);
 
                 donorsList.add(donor);
             }
@@ -470,7 +478,7 @@ public class MysqlFunctions {
             String decryptedPassword = new PasswordEncryptionWithAES().doDecrypt(encryptedPassword, key);
 
             if (decryptedPassword.equals(password)) {
-                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on FROM donors WHERE email = ? ";
+                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on,req_on FROM donors WHERE email = ? ";
 
                 PreparedStatement getDonorDetailsStatement = this.connection.prepareStatement(getDonorQuery);
 
@@ -491,8 +499,9 @@ public class MysqlFunctions {
                     int e_ready = donorResult.getInt("e_ready");
                     String avail = donorResult.getString("availability");
                     String reg_on = donorResult.getString("reg_on");
+                    String req_on = donorResult.getString("req_on");
 
-                    donor = new DonorResource(id, e_ready, 0, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on);
+                    donor = new DonorResource(id, e_ready, 0, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on, req_on);
 
                 }
 

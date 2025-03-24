@@ -4,9 +4,9 @@ public class DonorResource {
 
     public int id, e_ready, status;
     public String name, dob, gender, blood_group, email, phno, last_donation, availability;
-    public String reg_on;
+    public String reg_on, req_on;
 
-    public DonorResource(int id, int e_ready, int status, String name, String dob, String gender, String blood_group, String email, String phno, String last_donation, String availability, String reg_on) {
+    public DonorResource(int id, int e_ready, int status, String name, String dob, String gender, String blood_group, String email, String phno, String last_donation, String availability, String reg_on, String req_on) {
         this.id = id;
         this.e_ready = e_ready;
         this.status = status;
@@ -20,6 +20,7 @@ public class DonorResource {
         this.last_donation = last_donation;
         this.availability = availability;
         this.reg_on = reg_on;
+        this.req_on = req_on;
     }
 
     @Override
