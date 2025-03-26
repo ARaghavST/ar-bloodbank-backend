@@ -77,16 +77,28 @@ public class AdminServlet extends HttpServlet {
                         donorsFilter.put("req_date_range", donor_req_date_range);
                     }
 
-                    List<DonorResource> donorsList = null;
-                    if (mysql.GetDonorsByFilters(donorsFilter) != null) {
-                        donorsList = (List<DonorResource>) mysql.GetDonorsByFilters(donorsFilter);
-                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donors fetched successfully!", null, donorsList);
-                    } else {
-                        jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donors", "Exception occured! Please check logs in server", null);
-                    }
+                    if (donorsFilter.containsKey("status") && donorsFilter.get("status").equals("2")) {
+                        // this is the case to fetch donation requests
+                        List<Map<String, String>> donationRequestsList = mysql.GetDonationRequests();
+                        if (donationRequestsList == null) {
+                            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donation requests", "Exception occured! Please check logs in server", null);
+                        } else {
+                            jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donation requests fetched successfully!", null, donationRequestsList);
+                        }
 
+                    } else {
+                        List<DonorResource> donorsList = null;
+                        if (mysql.GetDonorsByFilters(donorsFilter) != null) {
+                            donorsList = (List<DonorResource>) mysql.GetDonorsByFilters(donorsFilter);
+                            jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donors fetched successfully!", null, donorsList);
+                        } else {
+                            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donors", "Exception occured! Please check logs in server", null);
+                        }
+
+                    }
                     // if mysql returned null, then we say that we had mysql exception
                     break;
+
                 case "receivers":
 
                     List<ReceiverResource> receiversList = null;

@@ -49,8 +49,7 @@ public class DonorServlet extends HttpServlet {
 
         if (toUpdateDetailMap == null) {
             jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform donor updation", "Missing update body", null);
-        }
-        else {
+        } else {
             if (connection != null) {
                 MysqlFunctions mysql = new MysqlFunctions(connection);
 
@@ -58,12 +57,10 @@ public class DonorServlet extends HttpServlet {
 
                 if (isUpdated) {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Details updated successfully!", null, null);
-                }
-                else {
+                } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Details not updated!", null, null);
                 }
-            }
-            else {
+            } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform PUT at /donor", "Exception in establishing connection !", null);
             }
         }
@@ -103,35 +100,51 @@ public class DonorServlet extends HttpServlet {
 
             if (bodyMap == null) {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Missing login details", null);
-            }
-            else if (!bodyMap.containsKey("email") && !bodyMap.containsKey("password")) {
+            } else if (!bodyMap.containsKey("email") && !bodyMap.containsKey("password")) {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot peform login", "Either email / password is empty", null);
-            }
-            else {
+            } else {
                 if (connection != null) {
 
                     MysqlFunctions mysql = new MysqlFunctions(connection);
 
-                    // here 
+                    // here
                     ReturnObject returnObj = mysql.CheckLoginDonor(bodyMap.get("email"), bodyMap.get("password"));
 
                     if (returnObj.error != null) {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Cannot perform login!", returnObj.error, null);
-                    }
-                    else {
+                    } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor logged in successfully!", null, returnObj);
                     }
-                }
-                else {
+                } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET at /donor", "Exception in establishing connection !", null);
                 }
             }
+        } else if (path.equals("/donate")) {
+            if (connection != null) {
 
-            String responseInJsonString = gson.toJson(jsonRes);
+                StringBuilder sb = new StringBuilder();
+                try (BufferedReader reader = request.getReader()) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                }
 
-            writer.println(responseInJsonString);
-        }
-        else {
+                Map<String, String> data = gson.fromJson(sb.toString(), Map.class);
+
+                String targetId = request.getParameter("id");
+                MysqlFunctions mysql = new MysqlFunctions(connection);
+
+                if (mysql.InsertNewDonationRequest(data, targetId)) {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Dononation requested created successfully", null, 1);
+                } else {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot send donation request", "Exception occured! Please check logs in server", null);
+                }
+            } else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor/donate/", "Exception in establishing connection !", null);
+            }
+
+        } else {
             if (connection != null) {
 
                 MysqlFunctions mysql = new MysqlFunctions(connection);
@@ -148,18 +161,16 @@ public class DonorServlet extends HttpServlet {
 
                 if (mysql.InsertDonorData(signupData)) {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
-                }
-                else {
+                } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);
                 }
-            }
-            else {
+            } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor", "Exception in establishing connection !", null);
             }
 
-            String responseInJsonString = gson.toJson(jsonRes);
-            writer.println(responseInJsonString);
         }
+        String responseInJsonString = gson.toJson(jsonRes);
+        writer.println(responseInJsonString);
     }
 
     @Override
@@ -183,13 +194,11 @@ public class DonorServlet extends HttpServlet {
 
             if (donationsHistory == null) {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donations history", "Exception occured! Please check logs in server", null);
-            }
-            else {
+            } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Success", null, donationsHistory);
             }
 
-        }
-        else {
+        } else {
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET /donor/*", "Exception in establishing connection !", null);
         }
 

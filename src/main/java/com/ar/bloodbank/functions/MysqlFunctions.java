@@ -414,10 +414,16 @@ public class MysqlFunctions {
      */
     public boolean InsertDonorData(DonorResource data) {
 
-        String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status) values (?,?,?,?,?,?,?,?,?)";
+        String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status,req_on) values (?,?,?,?,?,?,?,?,?,?)";
 
         try {
             PreparedStatement insertDonorStatement = this.connection.prepareStatement(insertDonorQuery);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Get the current date and time
+            LocalDateTime now = LocalDateTime.now();
+            // Format and print it
+            String preparedOn = now.format(formatter);
 
             insertDonorStatement.setString(1, data.name);
             insertDonorStatement.setString(2, data.dob);
@@ -428,6 +434,7 @@ public class MysqlFunctions {
             insertDonorStatement.setInt(7, data.e_ready);
             insertDonorStatement.setString(8, "YES");
             insertDonorStatement.setInt(9, 0);
+            insertDonorStatement.setString(10, preparedOn);
 
             int isInserted = insertDonorStatement.executeUpdate();
 
@@ -579,7 +586,7 @@ public class MysqlFunctions {
      */
     public List<Map<String, String>> GetDonationHistoryForDonorById(String donorId) {
 
-        String getDonationsQuery = "SELECT donations.id as donorid,donations.quantity as amount,donations.donation_time as donated_time,donations.weight as weight from donations JOIN donors ON donations.donor_id = donors.id where donors.id = " + donorId;
+        String getDonationsQuery = "SELECT donations.id as donorid,donations.quantity as amount,donations.donation_time as donated_time,donations.weight as weight from donations JOIN donors ON donations.donor_id = donors.id WHERE donors.id = " + donorId + " AND donations.status = 1";
 
         List<Map<String, String>> donationHistoryList = new ArrayList<>();
 
@@ -629,5 +636,100 @@ public class MysqlFunctions {
             System.out.println("Exception occured : " + e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * This function will insert the donation data in bloodbank donations table
+     * .
+     *
+     * @param data
+     *
+     * @return true/false
+     *
+     */
+    public boolean InsertNewDonationRequest(Map<String, String> data, String targetId) {
+
+        String insertDonationQuery = "INSERT into donations (donor_id,blood_group,available_date) values (?,?,?);";
+
+        try {
+            PreparedStatement insertDonationStatement = this.connection.prepareStatement(insertDonationQuery);
+
+            insertDonationStatement.setInt(1, Integer.parseInt(targetId));
+            insertDonationStatement.setString(2, data.get("blood_group"));
+            insertDonationStatement.setString(3, data.get("available_date"));
+
+            int rowsAffected = insertDonationStatement.executeUpdate();
+            insertDonationStatement.close();
+
+            if (rowsAffected != 0) {
+                String updateDonorQuery = "UPDATE donors SET status = 2 , req_on = ? WHERE id = ?";
+
+                PreparedStatement updateDonorStatement = this.connection.prepareStatement(updateDonorQuery);
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // Get the current date and time
+                LocalDateTime now = LocalDateTime.now();
+                // Format and print it
+                String reqOn = now.format(formatter);
+
+                updateDonorStatement.setString(1, reqOn);
+                updateDonorStatement.setString(2, targetId);
+
+                rowsAffected = updateDonorStatement.executeUpdate();
+
+                if (rowsAffected != 0) {
+                    return true;
+                }
+
+                updateDonorStatement.close();
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * This function will get the donation requests data from donors and
+     * donations.
+     *
+     *
+     * @return List of donation request objects
+     *
+     */
+    public List<Map<String, String>> GetDonationRequests() {
+
+        String donationRequestQuery = "SELECT * FROM donations join donors on donations.donor_id = donors.id WHERE  donations.status = 0 AND donors.status = 2;";
+
+        try {
+            PreparedStatement donationReqStatement = this.connection.prepareStatement(donationRequestQuery);
+            ResultSet result = donationReqStatement.executeQuery();
+            List<Map<String, String>> donationRequestList = new ArrayList<>();
+
+            while (result.next()) {
+                Map<String, String> object = new HashMap<>();
+
+                object.put("id", result.getInt("id") + "");
+                object.put("blood_group", result.getString("blood_group"));
+                object.put("available_date", result.getString("available_date"));
+                object.put("name", result.getString("name"));
+                object.put("gender", result.getString("gender"));
+                object.put("dob", result.getString("dob"));
+                object.put("email", result.getString("email"));
+                object.put("phno", result.getString("phno"));
+                object.put("req_on", result.getString("req_on"));
+
+                donationRequestList.add(object);
+
+            }
+            return donationRequestList;
+
+        } catch (SQLException s) {
+            System.out.println("Exception occured : " + s.getMessage());
+        }
+
+        return null;
     }
 }

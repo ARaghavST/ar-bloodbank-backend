@@ -1,3 +1,4 @@
+com\ar\bloodbank\main\SendMailServlet.class
 com\ar\bloodbank\resources\AdminResource.class
 com\ar\bloodbank\resources\ReceiverResource.class
 com\ar\bloodbank\dbconnection\DatabaseConnect.class
@@ -13,6 +14,7 @@ com\ar\bloodbank\resources\ReturnObject.class
 com\ar\bloodbank\main\BloodStockServlet.class
 com\ar\bloodbank\helpers\EmailFunctions$1.class
 com\ar\bloodbank\main\AdminServlet.class
+com\ar\bloodbank\helpers\EmailFunctions$2.class
 AppContextListener.class
 com\ar\bloodbank\functions\MysqlFunctions.class
 com\ar\bloodbank\resources\UpdateBodyResource.class

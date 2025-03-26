@@ -88,4 +88,73 @@ public class EmailFunctions {
         return false;
     }
 
+    /**
+     * This function will send email to donors for blood request
+     *
+     *
+     * @param targetEmail
+     * @param targetName
+     * @param bloodGroupNeeded
+     *
+     * @return true OR false
+     *
+     */
+    public boolean sendBloodRequestEmail(String targetEmail, String targetName, String bloodGroupNeeded) {
+        // sets SMTP server properties
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", HOST);
+        properties.put("mail.smtp.port", PORT);
+        properties.put("mail.smtp.auth", "true");
+        // below line is for approval of successful handshake
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        // creates a new session with an authenticator
+        Authenticator auth = new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(USERNAME, PASSWORD);
+            }
+        };
+
+        // We are creating an email session , with above properties , auth
+        // Session is actually a timed work , means it is a type of task which should be completed within a time period , ex: 10 seconds
+        // Session is for 2 way handshake
+        Session session = Session.getInstance(properties, auth);
+
+        // creates a new e-mail message
+        Message msg = new MimeMessage(session);
+
+        String body = "Dear " + targetName + ",\n"
+                + "\n"
+                + "I hope this email finds you well. We are reaching out with an urgent request for blood donation. Your generosity and willingness to donate can help save lives.\n"
+                + "\n"
+                + "Currently, we are in need of [" + bloodGroupNeeded + "] for a patient in critical condition. Your past contributions have made a significant impact, and we kindly ask if you would consider donating again."
+                + "\n"
+                + "Please raise a donation request from your profile, and provide an availability date, and we can proceed for blood donation."
+                + "For any questions or to confirm your donation, please reply to this email or contact us at arbloodbank.1201@gmail.com."
+                + "\n"
+                + "Best regards,\n"
+                + "BloodBank Admin\n"
+                + "arbloodbank.1201@gmail.com";
+
+        try {
+
+            // pre-defined functionality
+            msg.setFrom(new InternetAddress(USERNAME));
+
+            InternetAddress[] toAddresses = {new InternetAddress(targetEmail)};
+            msg.setRecipients(Message.RecipientType.TO, toAddresses);
+            msg.setSubject("Urgent Blood Donation Needed !");
+            msg.setText(body);
+
+            // sends the e-mail
+            Transport.send(msg);
+
+            return true;
+        } catch (MessagingException m) {
+            System.out.println("Exception occured in sending mail : " + m.getMessage());
+        }
+        return false;
+    }
+
 }
