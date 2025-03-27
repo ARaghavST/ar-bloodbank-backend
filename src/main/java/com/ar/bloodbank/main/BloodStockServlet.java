@@ -43,11 +43,9 @@ public class BloodStockServlet extends HttpServlet {
             if (stockMap == null) {
                 // there is some error
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot get data , due to error", "Exception in fetching bloodstock!", null);
-            }
-            else {
+            } else {
 
-                String bloodStockJsonString = gson.toJson(stockMap);
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, bloodStockJsonString);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, stockMap);
             }
 
             // below line will convert the JAVA response object into JSON string
@@ -56,8 +54,7 @@ public class BloodStockServlet extends HttpServlet {
             // below line will write the string to response writerput
             writer.println(responseString);
 
-        }
-        else {
+        } else {
 
             // from here we will send err message in response when connection is null
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot GET bloodstock", "Exception in establishing connection !", null);
@@ -111,13 +108,11 @@ public class BloodStockServlet extends HttpServlet {
             int insertionDone = mysql.InsertReceiverData(receiver);
 
             if (insertionDone == 1) {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, null);
-            }
-            else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, insertionDone);
+            } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert receiver's data", "Error in insertion mysql", null);
             }
-        }
-        else {
+        } else {
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot POST /bloodstock", "Exception in establishing connection !", null);
         }
 

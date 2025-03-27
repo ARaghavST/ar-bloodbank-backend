@@ -696,12 +696,22 @@ public class MysqlFunctions {
      * donations.
      *
      *
+     * @param filters
      * @return List of donation request objects
      *
      */
-    public List<Map<String, String>> GetDonationRequests() {
+    public List<Map<String, String>> GetDonationRequests(Map<String, String> filters) {
 
-        String donationRequestQuery = "SELECT * FROM donations join donors on donations.donor_id = donors.id WHERE  donations.status = 0 AND donors.status = 2;";
+        String donationRequestQuery = "SELECT * FROM donations join donors on donations.donor_id = donors.id WHERE  donations.status = 0 AND donors.status = 2";
+
+        if (filters.containsKey("name")) {
+            donationRequestQuery = donationRequestQuery + " AND name LIKE '" + filters.get("name") + "%'";
+        }
+
+        if (filters.containsKey("req_date_range")) {
+            String[] dateArray = filters.get("req_date_range").split(",");
+            donationRequestQuery = donationRequestQuery + " AND req_on BETWEEN '" + dateArray[0] + "' AND '" + dateArray[1] + "'";
+        }
 
         try {
             PreparedStatement donationReqStatement = this.connection.prepareStatement(donationRequestQuery);
@@ -711,7 +721,7 @@ public class MysqlFunctions {
             while (result.next()) {
                 Map<String, String> object = new HashMap<>();
 
-                object.put("id", result.getInt("id") + "");
+                object.put("row_id", result.getInt("id") + "");
                 object.put("blood_group", result.getString("blood_group"));
                 object.put("available_date", result.getString("available_date"));
                 object.put("name", result.getString("name"));
@@ -720,6 +730,7 @@ public class MysqlFunctions {
                 object.put("email", result.getString("email"));
                 object.put("phno", result.getString("phno"));
                 object.put("req_on", result.getString("req_on"));
+                object.put("donor_id", result.getInt(9) + "");
 
                 donationRequestList.add(object);
 
@@ -731,5 +742,60 @@ public class MysqlFunctions {
         }
 
         return null;
+    }
+
+    /**
+     * This function will get the donation requests data from donors and
+     * donations.
+     *
+     *
+     * @return List of donation request objects
+     *
+     */
+    public int updateDonorAndDonations(Map<String, String> updateMap) {
+
+        String updateDonationsQuery = "UPDATE donations SET quantity = ? , donation_time = ?, status = 1, weight = ? WHERE donor_id = ? AND id = ?";
+
+        String updateDonorsQuery = "UPDATE donors SET status = 1 , last_donation = ? WHERE id = ? ";
+
+        String targetDonorId = updateMap.get("donor_id");
+        String targetDonationsRowId = updateMap.get("row_id");
+
+        try {
+            PreparedStatement donationsUpdateStatement = this.connection.prepareStatement(updateDonationsQuery);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            // Get the current date and time
+            LocalDateTime now = LocalDateTime.now();
+            // Format and print it
+            String donatedOnTime = now.format(formatter);
+
+            donationsUpdateStatement.setDouble(1, Double.parseDouble(updateMap.get("quantity")));
+            donationsUpdateStatement.setString(2, donatedOnTime);
+            donationsUpdateStatement.setDouble(3, Double.parseDouble(updateMap.get("weight")));
+            donationsUpdateStatement.setInt(4, Integer.parseInt(targetDonorId));
+            donationsUpdateStatement.setInt(5, Integer.parseInt(targetDonationsRowId));
+
+            int rowsAffected = donationsUpdateStatement.executeUpdate();
+            donationsUpdateStatement.close();
+
+            if (rowsAffected > 0) {
+                PreparedStatement donorsUpdateStatement = this.connection.prepareStatement(updateDonorsQuery);
+
+                donorsUpdateStatement.setString(1, donatedOnTime);
+                donorsUpdateStatement.setInt(2, Integer.parseInt(targetDonorId));
+
+                rowsAffected = donorsUpdateStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    return 1;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Exception occured : " + e.getMessage());
+        }
+
+        return 0;
+
     }
 }

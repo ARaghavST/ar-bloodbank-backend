@@ -79,7 +79,7 @@ public class AdminServlet extends HttpServlet {
 
                     if (donorsFilter.containsKey("status") && donorsFilter.get("status").equals("2")) {
                         // this is the case to fetch donation requests
-                        List<Map<String, String>> donationRequestsList = mysql.GetDonationRequests();
+                        List<Map<String, String>> donationRequestsList = mysql.GetDonationRequests(donorsFilter);
                         if (donationRequestsList == null) {
                             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot fetch donation requests", "Exception occured! Please check logs in server", null);
                         } else {
@@ -190,4 +190,48 @@ public class AdminServlet extends HttpServlet {
         // writer.println(new Gson().toJson(jsonRes));
         writer.println(responseInString);
     }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        JsonResponse jsonRes = null;
+
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+
+        Gson gson = new Gson();
+
+        DatabaseConnect db = new DatabaseConnect(); // connecting to mysql cloud (google cloud sql)
+        Connection connection = db.ConnectAndReturnConnection();
+
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = request.getReader()) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+
+        if (connection != null) {
+            Map<String, String> updateDonationBody = gson.fromJson(sb.toString(), Map.class);
+
+            MysqlFunctions mysql = new MysqlFunctions(connection);
+
+            int updationDone = mysql.updateDonorAndDonations(updateDonationBody);
+
+            if (updationDone == 1) {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Records updated successfully!", null, 1);
+            } else {
+                jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot peform donations updation. Check logs in server!", "Donation request update error", null);
+            }
+        } else {
+            jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform PUT at /admin", "Exception in establishing connection !", null);
+        }
+
+        String responseInString = gson.toJson(jsonRes);
+        // OR
+        // writer.println(new Gson().toJson(jsonRes));
+        writer.println(responseInString);
+    }
+
 }
