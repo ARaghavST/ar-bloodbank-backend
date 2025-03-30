@@ -176,7 +176,7 @@ public class AdminServlet extends HttpServlet {
             MysqlFunctions mysql = new MysqlFunctions(connection);
 
             if (mysql.ValidateAdminLogin(adminDetails)) {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Admin login success", null, 1);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Admin login success!", null, 1);
             } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot peform login.Check logs in server", "Admin login error in mysql", null);
             }

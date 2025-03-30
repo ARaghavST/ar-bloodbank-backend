@@ -485,7 +485,7 @@ public class MysqlFunctions {
             String decryptedPassword = new PasswordEncryptionWithAES().doDecrypt(encryptedPassword, key);
 
             if (decryptedPassword.equals(password)) {
-                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on,req_on FROM donors WHERE email = ? ";
+                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on,req_on,status FROM donors WHERE email = ? ";
 
                 PreparedStatement getDonorDetailsStatement = this.connection.prepareStatement(getDonorQuery);
 
@@ -507,8 +507,9 @@ public class MysqlFunctions {
                     String avail = donorResult.getString("availability");
                     String reg_on = donorResult.getString("reg_on");
                     String req_on = donorResult.getString("req_on");
+                    int status = donorResult.getInt("status");
 
-                    donor = new DonorResource(id, e_ready, 0, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on, req_on);
+                    donor = new DonorResource(id, e_ready, status, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on, req_on);
 
                 }
 
@@ -517,7 +518,7 @@ public class MysqlFunctions {
 
             } else {
                 returnObj.data = null;
-                returnObj.error = "WRONG PASSWORD";
+                returnObj.error = "Wrong password!";
             }
 
         } catch (SQLException e) {
@@ -586,7 +587,7 @@ public class MysqlFunctions {
      */
     public List<Map<String, String>> GetDonationHistoryForDonorById(String donorId) {
 
-        String getDonationsQuery = "SELECT donations.id as donorid,donations.quantity as amount,donations.donation_time as donated_time,donations.weight as weight from donations JOIN donors ON donations.donor_id = donors.id WHERE donors.id = " + donorId + " AND donations.status = 1";
+        String getDonationsQuery = "SELECT donations.id as donorid,donations.quantity as amount,donations.donation_time as donated_time,donations.weight as weight from donations JOIN donors ON donations.donor_id = donors.id WHERE donors.id = " + donorId + " AND donations.status = 1 ORDER BY donation_time DESC;";
 
         List<Map<String, String>> donationHistoryList = new ArrayList<>();
 

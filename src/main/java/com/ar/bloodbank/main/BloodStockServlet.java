@@ -108,7 +108,7 @@ public class BloodStockServlet extends HttpServlet {
             int insertionDone = mysql.InsertReceiverData(receiver);
 
             if (insertionDone == 1) {
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Received inserted successfully", null, insertionDone);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Blood request submitted successfully !", null, insertionDone);
             } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert receiver's data", "Error in insertion mysql", null);
             }

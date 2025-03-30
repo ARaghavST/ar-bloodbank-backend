@@ -113,7 +113,7 @@ public class DonorServlet extends HttpServlet {
                     if (returnObj.error != null) {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Cannot perform login!", returnObj.error, null);
                     } else {
-                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor logged in successfully!", null, returnObj);
+                        jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Logged in successfully!", null, returnObj);
                     }
                 } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform GET at /donor", "Exception in establishing connection !", null);
