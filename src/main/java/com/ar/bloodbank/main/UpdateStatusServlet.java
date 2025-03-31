@@ -22,6 +22,8 @@ import java.sql.Connection;
 @WebServlet(name = "UpdateStatusServlet", urlPatterns = {"/update-status"})
 public class UpdateStatusServlet extends HttpServlet {
 
+    // this doPut handles donor's approval , receiver approval ( status 0 -> status 1 )
+    // we will send target user to update in query parameter i.e., ?for=donor OR ?for=receiver
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -60,8 +62,7 @@ public class UpdateStatusServlet extends HttpServlet {
 
                     if (mysql.UpdateReceiverStatus(bodyInJavaObject.id)) {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Receiver status updated!", null, 1);
-                    }
-                    else {
+                    } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot update receiver's status", "Exception occured! Please check logs in server", null);
                     }
 
@@ -70,8 +71,7 @@ public class UpdateStatusServlet extends HttpServlet {
 
                     if (mysql.UpdateDonorStatus(bodyInJavaObject.id)) {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor status updated!", null, 1);
-                    }
-                    else {
+                    } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot update donor's status", "Exception occured! Please check logs in server", null);
                     }
 
@@ -80,8 +80,7 @@ public class UpdateStatusServlet extends HttpServlet {
                     System.out.println("Nothing selected");
 
             }
-        }
-        else {
+        } else {
             jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform PUT at /update-status", "Exception in establishing connection !", null);
         }
 

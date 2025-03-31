@@ -10,19 +10,28 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+// CorsFilter is used to implement manual restriction of accessing thie backend server
+// CORS - Cross Origin Resource Sharing
+// Filter is an interface , which is pre-defined , which is executed on every API call
 public class CorsFilter implements Filter {
 
+    // in JAVA, init function will be called first, at the START of a incoming request
+    // @Override is used for Function Override
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+
     }
 
+    // We do this because we want access to our backend from all origin
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletResponse res = (HttpServletResponse) response;
         HttpServletRequest req = (HttpServletRequest) request;
 
-        res.setHeader("Access-Control-Allow-Origin", "*"); // Change "*" to your frontend URL for security
+        // * in below line means , the backend can be accessed from any origin/host/IP
+        res.setHeader("Access-Control-Allow-Origin", "*");
+
         res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
@@ -30,6 +39,9 @@ public class CorsFilter implements Filter {
     }
 
     @Override
+    // when request is closed / destroyed
+    // destroy is a function defined in interface , hence , must be declared wherever we implement it
     public void destroy() {
+
     }
 }

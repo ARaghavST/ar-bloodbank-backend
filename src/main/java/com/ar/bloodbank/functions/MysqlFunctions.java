@@ -20,8 +20,10 @@ import javax.crypto.SecretKey;
 public class MysqlFunctions {
 
     Connection connection;
+// env class contains values like passwords, encryption key etc
     Dotenv dotenv;
 
+    //constructor for class MysqlFunctions
     public MysqlFunctions(Connection mysqlConnection) {
         this.dotenv = Dotenv.load();
         this.connection = mysqlConnection;
@@ -35,6 +37,12 @@ public class MysqlFunctions {
      * available for each blood group
      *
      *
+     */
+    /**
+     * this map contains total quantity of blood amount of each type (contains
+     * value we got after subtracting total blood amount "DONATED" of each blood
+     * type (donations table) - total blood amount "RECEIVED" of each blood type
+     * (receivers table)
      */
     public Map<String, Double> GetAvailableBloodStock() {
 
@@ -205,6 +213,14 @@ public class MysqlFunctions {
         return null;
     }
 
+    /**
+     * This get all receivers with given filters
+     *
+     * @param filters
+     *
+     * @return List<Receiver> : List of receiver objects
+     *
+     */
     public Object GetReceivers(Map<String, String> filters) {
 
         String receiversQuery = "SELECT * from receiver WHERE status IN (0,1)";
@@ -264,45 +280,12 @@ public class MysqlFunctions {
         return null;
     }
 
-    public Object GetReceiversHistory() {
-
-        String approvedReceiversQuery = "SELECT * from receiver WHERE status = 1;";
-
-        try {
-            Statement mysqlConvStatementObject = this.connection.createStatement();
-
-            ResultSet approvedReceiversResult = mysqlConvStatementObject.executeQuery(approvedReceiversQuery);
-            List<ReceiverResource> approvedReceiversList = new ArrayList();
-
-            while (approvedReceiversResult.next()) {
-                int sno = approvedReceiversResult.getInt("sno");
-                String name = approvedReceiversResult.getString("name");
-                String phno = approvedReceiversResult.getString("phno");
-                String email = approvedReceiversResult.getString("email");
-                String aadhar = approvedReceiversResult.getString("aadhar");
-                String bg_needed = approvedReceiversResult.getString("bg_needed");
-                Double quantity = approvedReceiversResult.getDouble("quantity");
-                String req_date = approvedReceiversResult.getString("req_date");
-                String rec_date = approvedReceiversResult.getString("rec_date");
-                int status = approvedReceiversResult.getInt("status");
-
-                ReceiverResource receiver = new ReceiverResource(sno, status, name, phno, email, aadhar, bg_needed, req_date, rec_date, quantity);
-                approvedReceiversList.add(receiver);
-            }
-            return approvedReceiversList;
-
-        } catch (SQLException e) {
-            System.out.println("Exception occured : " + e.getMessage());
-        }
-
-        return null;
-    }
-
     /**
      * This function will update the receivers status in receiver table for
      * given receiver id (receivers) .
      *
      * @param id
+     * @param email
      *
      * @return true/false
      *
@@ -325,6 +308,7 @@ public class MysqlFunctions {
             int isUpdated = receiverUpdateStatement.executeUpdate();
 
             if (isUpdated > 0) {
+
                 return true;
             }
 

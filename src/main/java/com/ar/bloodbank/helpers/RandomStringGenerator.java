@@ -2,6 +2,7 @@ package com.ar.bloodbank.helpers;
 
 import java.security.SecureRandom;
 
+// This class is used for generate a random string with given length ( Donor Password Generation )
 public class RandomStringGenerator {
 
     public String generatePassword(int length) {

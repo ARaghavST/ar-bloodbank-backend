@@ -23,6 +23,7 @@ public class DonorServlet extends HttpServlet {
 
     @Override
     // In this doPut will be handling password update, is_emergency update and availability update for donor
+    // Donor profile
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         JsonResponse jsonRes = null;
 
@@ -53,6 +54,7 @@ public class DonorServlet extends HttpServlet {
             if (connection != null) {
                 MysqlFunctions mysql = new MysqlFunctions(connection);
 
+                // UpdateDonorDetails will update the donor details (availability, e_ready or password )
                 boolean isUpdated = mysql.UpdateDonorDetails(toUpdateDetailMap, targetId);
 
                 if (isUpdated) {
@@ -71,7 +73,11 @@ public class DonorServlet extends HttpServlet {
 
     }
 
-    // In this doGet, we will be handling donor signup (new donor will be added in db)
+    /**
+     * In this doPost, we will be handling donor login - /login donor's "New
+     * Donation Request" - /donate donor's signup (new donor will be added in
+     * db) - /
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         JsonResponse jsonRes = null;
@@ -87,7 +93,7 @@ public class DonorServlet extends HttpServlet {
         String path = request.getPathInfo();
 
         if (path.equals("/login")) {
-
+            // Login donor
             StringBuilder sb = new StringBuilder();
             try (BufferedReader reader = request.getReader()) {
                 String line;
@@ -107,7 +113,7 @@ public class DonorServlet extends HttpServlet {
 
                     MysqlFunctions mysql = new MysqlFunctions(connection);
 
-                    // here
+                    // CheckLoginDonor, checks for existing donor with given username and password
                     ReturnObject returnObj = mysql.CheckLoginDonor(bodyMap.get("email"), bodyMap.get("password"));
 
                     if (returnObj.error != null) {
@@ -120,6 +126,7 @@ public class DonorServlet extends HttpServlet {
                 }
             }
         } else if (path.equals("/donate")) {
+            // Donation Request
             if (connection != null) {
 
                 StringBuilder sb = new StringBuilder();
@@ -145,6 +152,8 @@ public class DonorServlet extends HttpServlet {
             }
 
         } else {
+
+            // SignUP donors
             if (connection != null) {
 
                 MysqlFunctions mysql = new MysqlFunctions(connection);
@@ -173,6 +182,7 @@ public class DonorServlet extends HttpServlet {
         writer.println(responseInJsonString);
     }
 
+    // This doGet will fetch donation history in donor profile UI
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         JsonResponse jsonRes = null;

@@ -19,6 +19,7 @@ import java.util.Map;
 @WebServlet(name = "BloodStockServlet", urlPatterns = {"/bloodstock"})
 public class BloodStockServlet extends HttpServlet {
 
+    // this doGet is used to fetch bloodstock from ( donations - receivers )
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -69,6 +70,7 @@ public class BloodStockServlet extends HttpServlet {
 
     }
 
+    // this doPost is used for inserting receiver request into receivers table with status = 0 ( we do this in BloodStockServlet, since we don't have ReceiversServlet )
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -105,6 +107,7 @@ public class BloodStockServlet extends HttpServlet {
             // Below creates an object of Mysqlfunctions class to call the function which will insert in receivers table in mysql db
             MysqlFunctions mysql = new MysqlFunctions(connection);
 
+            // InsertReceiverData function inserts the receiver data into receivers table
             int insertionDone = mysql.InsertReceiverData(receiver);
 
             if (insertionDone == 1) {
