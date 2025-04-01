@@ -396,7 +396,7 @@ public class MysqlFunctions {
      * @return true/false
      *
      */
-    public boolean InsertDonorData(DonorResource data) {
+    public int InsertDonorData(DonorResource data) {
 
         String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status,req_on) values (?,?,?,?,?,?,?,?,?,?)";
 
@@ -423,13 +423,26 @@ public class MysqlFunctions {
             int isInserted = insertDonorStatement.executeUpdate();
 
             if (isInserted == 1) {
-                return true;
+
+                EmailFunctions email = new EmailFunctions();
+                boolean emailSent = email.sendSignupTestEmail(data.email, data.name);
+
+                if (emailSent) {
+                    return 1;
+                }
+
             }
 
         } catch (SQLException e) {
+
+            // In case of duplicate entry for any field , if we have applied UNIQUE constraint , then we get error code as 1062 from MYSQL EXCEPTION
+            if (e.getErrorCode() == 1062) {
+                return 2;
+            }
+
             System.out.println("Exception occured : " + e.getMessage());
         }
-        return false;
+        return 0;
     }
 
     /**
@@ -444,65 +457,49 @@ public class MysqlFunctions {
      */
     public ReturnObject CheckLoginDonor(String email, String password) {
 
-        String getPassQuery = "SELECT password from donors where email = ?";
-
         ReturnObject returnObj = new ReturnObject();
+
+        String getPassQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on,req_on,status from donors where email = ? AND password = ?;";
+
+        Dotenv dotenv = Dotenv.load();
+        String salt = dotenv.get("ENCRYPTION_SALT");
+        SecretKey key = PasswordEncryptionWithAES.generateKey(salt);
+        String encryptedPassword = new PasswordEncryptionWithAES().doEncrypt(password, key);
 
         try {
 
-            PreparedStatement getPassStatement = this.connection.prepareStatement(getPassQuery);
+            PreparedStatement loginDonorStatement = this.connection.prepareStatement(getPassQuery);
 
-            getPassStatement.setString(1, email);
-            ResultSet result = getPassStatement.executeQuery();
+            loginDonorStatement.setString(1, email);
+            loginDonorStatement.setString(2, encryptedPassword);
 
-            String encryptedPassword = "";
+            ResultSet donorResult = loginDonorStatement.executeQuery();
 
-            while (result.next()) {
-                encryptedPassword = result.getString("password");
+            DonorResource donor = null;
+            while (donorResult.next()) {
+                int id = donorResult.getInt("id");
+                String name = donorResult.getString("name");
+                String dob = donorResult.getString("dob");
+                String gender = donorResult.getString("gender");
+                String blood_group = donorResult.getString("blood_group");
+                String phno = donorResult.getString("phno");
+                String last_donation = donorResult.getString("last_donation");
+                int e_ready = donorResult.getInt("e_ready");
+                String avail = donorResult.getString("availability");
+                String reg_on = donorResult.getString("reg_on");
+                String req_on = donorResult.getString("req_on");
+                int status = donorResult.getInt("status");
+
+                donor = new DonorResource(id, e_ready, status, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on, req_on);
+
             }
 
-            Dotenv dotenv = Dotenv.load();
-            String salt = dotenv.get("ENCRYPTION_SALT");
-
-            SecretKey key = PasswordEncryptionWithAES.generateKey(salt);
-
-            String decryptedPassword = new PasswordEncryptionWithAES().doDecrypt(encryptedPassword, key);
-
-            if (decryptedPassword.equals(password)) {
-                String getDonorQuery = "SELECT id,name,dob,gender,blood_group,phno,last_donation,e_ready,availability,reg_on,req_on,status FROM donors WHERE email = ? ";
-
-                PreparedStatement getDonorDetailsStatement = this.connection.prepareStatement(getDonorQuery);
-
-                getDonorDetailsStatement.setString(1, email);
-
-                ResultSet donorResult = getDonorDetailsStatement.executeQuery();
-
-                DonorResource donor = null;
-
-                while (donorResult.next()) {
-                    int id = donorResult.getInt("id");
-                    String name = donorResult.getString("name");
-                    String dob = donorResult.getString("dob");
-                    String gender = donorResult.getString("gender");
-                    String blood_group = donorResult.getString("blood_group");
-                    String phno = donorResult.getString("phno");
-                    String last_donation = donorResult.getString("last_donation");
-                    int e_ready = donorResult.getInt("e_ready");
-                    String avail = donorResult.getString("availability");
-                    String reg_on = donorResult.getString("reg_on");
-                    String req_on = donorResult.getString("req_on");
-                    int status = donorResult.getInt("status");
-
-                    donor = new DonorResource(id, e_ready, status, name, dob, gender, blood_group, email, phno, last_donation, avail, reg_on, req_on);
-
-                }
-
+            if (donor == null) {
+                returnObj.data = null;
+                returnObj.error = "Wrong email or password";
+            } else {
                 returnObj.data = donor;
                 returnObj.error = null;
-
-            } else {
-                returnObj.data = null;
-                returnObj.error = "Wrong password!";
             }
 
         } catch (SQLException e) {

@@ -113,7 +113,7 @@ public class DonorServlet extends HttpServlet {
 
                     MysqlFunctions mysql = new MysqlFunctions(connection);
 
-                    // CheckLoginDonor, checks for existing donor with given username and password
+                    //  , checks for existing donor with given username and password
                     ReturnObject returnObj = mysql.CheckLoginDonor(bodyMap.get("email"), bodyMap.get("password"));
 
                     if (returnObj.error != null) {
@@ -167,12 +167,14 @@ public class DonorServlet extends HttpServlet {
                 }
 
                 DonorResource signupData = gson.fromJson(sb.toString(), DonorResource.class);
-
-                if (mysql.InsertDonorData(signupData)) {
+                if (mysql.InsertDonorData(signupData) == 1) {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
+                } else if (mysql.InsertDonorData(signupData) == 2) {
+                    jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, null, "Email already in use!", 2);
                 } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);
                 }
+
             } else {
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot perform POST at /donor", "Exception in establishing connection !", null);
             }

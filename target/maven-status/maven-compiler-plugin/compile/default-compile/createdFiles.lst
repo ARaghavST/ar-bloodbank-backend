@@ -2,6 +2,7 @@ com\ar\bloodbank\main\SendMailServlet.class
 com\ar\bloodbank\resources\AdminResource.class
 com\ar\bloodbank\resources\ReceiverResource.class
 com\ar\bloodbank\dbconnection\DatabaseConnect.class
+com\ar\bloodbank\helpers\EmailFunctions$3.class
 com\ar\bloodbank\helpers\PasswordEncryptionWithAES.class
 com\ar\bloodbank\main\UpdateStatusServlet.class
 com\ar\bloodbank\helpers\EmailFunctions.class
