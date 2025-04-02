@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet(name = "BloodStockServlet", urlPatterns = {"/bloodstock"})
@@ -39,14 +40,28 @@ public class BloodStockServlet extends HttpServlet {
             // mysql is a variable (object) which will call functions present in MysqlFunctions JAVA file
             MysqlFunctions mysql = new MysqlFunctions(mysqlConnection);
 
-            Map<String, Double> stockMap = mysql.GetAvailableBloodStock();
+            // This map contains only the blood group and it's value which are present in the table
+            Map<String, Double> availableStockMap = mysql.GetAvailableBloodStock();
 
-            if (stockMap == null) {
+            /**
+             * This map will contain entries for all blood group , if no value
+             * is present in availableStockMap , then we will put 0 for that
+             * blood type in fullStockMap
+             *
+             */
+            String bloodTypes[] = {"A+", "B+", "AB+", "AB-", "B-", "O+", "O-", "A-"};
+            Map<String, Double> allStockMap = new HashMap<>();
+
+            for (String bloodType : bloodTypes) {
+                allStockMap.put(bloodType, availableStockMap.getOrDefault(bloodType, 0.0));
+            }
+
+            if (availableStockMap == null) {
                 // there is some error
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot get data , due to error", "Exception in fetching bloodstock!", null);
             } else {
 
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, stockMap);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, allStockMap);
             }
 
             // below line will convert the JAVA response object into JSON string
