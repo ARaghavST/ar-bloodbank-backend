@@ -14,7 +14,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet(name = "BloodStockServlet", urlPatterns = {"/bloodstock"})
@@ -49,19 +48,12 @@ public class BloodStockServlet extends HttpServlet {
              * blood type in fullStockMap
              *
              */
-            String bloodTypes[] = {"A+", "B+", "AB+", "AB-", "B-", "O+", "O-", "A-"};
-            Map<String, Double> allStockMap = new HashMap<>();
-
-            for (String bloodType : bloodTypes) {
-                allStockMap.put(bloodType, availableStockMap.getOrDefault(bloodType, 0.0));
-            }
-
             if (availableStockMap == null) {
                 // there is some error
                 jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot get data , due to error", "Exception in fetching bloodstock!", null);
             } else {
 
-                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, allStockMap);
+                jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "BloodStock Fetched Succesfully", null, availableStockMap);
             }
 
             // below line will convert the JAVA response object into JSON string

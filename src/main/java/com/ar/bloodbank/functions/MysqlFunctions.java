@@ -43,67 +43,77 @@ public class MysqlFunctions {
      * value we got after subtracting total blood amount "DONATED" of each blood
      * type (donations table) - total blood amount "RECEIVED" of each blood type
      * (receivers table)
+     *
+     * @return
      */
     public Map<String, Double> GetAvailableBloodStock() {
 
-        // this is a form of dictionary like Python, where we store values in form of key : value pairs
-        Map<String, Double> donationsMap = new HashMap<>();
-        Map<String, Double> receiversMap = new HashMap<>();
-
-        String bloodDonatedQuery = "SELECT blood_group, sum(quantity) as total FROM donations WHERE status = 1 GROUP BY blood_group;";
-        String bloodReceivedQuery = "SELECT bg_needed, sum(quantity) as total FROM receiver WHERE status = 1 GROUP BY bg_needed;";
-
+//        // this is a form of dictionary like Python, where we store values in form of key : value pairs
+//        Map<String, Double> donationsMap = new HashMap<>();
+//        Map<String, Double> receiversMap = new HashMap<>();
+//        String bloodDonatedQuery = "SELECT blood_group, sum(quantity) as total FROM donations WHERE status = 1 GROUP BY blood_group;";
+//        String bloodReceivedQuery = "SELECT bg_needed, sum(quantity) as total FROM receiver WHERE status = 1 GROUP BY bg_needed;";
         // This will store the result of donationsMap - receiversMap ( which is actually the blood available for each blood_group
-        Map<String, Double> bloodStock = new HashMap<>();
+//        Map<String, Double> bloodStock = new HashMap<>();
+        String bloodStockQuery = "SELECT * from bloodstock";
 
         try {
             // Java string converted to mysql string ( statement )
-            Statement mysqlConvertStatement = connection.createStatement();
+//            Statement mysqlConvertStatement = connection.createStatement();
+//
+//            ResultSet bloodDonatedResult = mysqlConvertStatement.executeQuery(bloodDonatedQuery);
+//
+//            while (bloodDonatedResult.next()) {
+//                String bg = bloodDonatedResult.getString("blood_group");
+//                Double amt = bloodDonatedResult.getDouble("total");
+//
+//                donationsMap.put(bg, amt);
+//            }
+//
+//            /**
+//             *
+//             * values will be stored like this -> donationsMap = { "O+":300,
+//             * "B+":400,"AB-":500 }
+//             *
+//             *
+//             */
+//            ResultSet bloodReceivedResult = mysqlConvertStatement.executeQuery(bloodReceivedQuery);
+//
+//            while (bloodReceivedResult.next()) {
+//                String bg = bloodReceivedResult.getString("bg_needed");
+//                Double amt = bloodReceivedResult.getDouble("total");
+//
+//                receiversMap.put(bg, amt);
+//            }
+//
+//            /**
+//             *
+//             * values will be stored like this -> receiversMap = {
+//             * "O+":300,"B+":400,"AB-":500 }
+//             *
+//             *
+//             */
+//            donationsMap.forEach((bloodGroupKey, amountValue) -> {
+//                double bloodAvailable = amountValue - (receiversMap.get(bloodGroupKey) == null ? 0 : receiversMap.get(bloodGroupKey));
+//                bloodStock.put(bloodGroupKey, bloodAvailable);
+//            });
+//
+//            bloodDonatedResult.close();
+//            bloodReceivedResult.close();
+//            this.connection.close();
+//
+//            return bloodStock;
+            Map<String, Double> bloodStockMap = new HashMap<>();
+            Statement bloodStockGetStatement = this.connection.createStatement();
 
-            ResultSet bloodDonatedResult = mysqlConvertStatement.executeQuery(bloodDonatedQuery);
+            ResultSet result = bloodStockGetStatement.executeQuery(bloodStockQuery);
 
-            while (bloodDonatedResult.next()) {
-                String bg = bloodDonatedResult.getString("blood_group");
-                Double amt = bloodDonatedResult.getDouble("total");
-
-                donationsMap.put(bg, amt);
+            while (result.next()) {
+                bloodStockMap.put(result.getString(1), result.getDouble(2));
             }
+            return bloodStockMap;
 
-            /**
-             *
-             * values will be stored like this -> donationsMap = { "O+":300,
-             * "B+":400,"AB-":500 }
-             *
-             *
-             */
-            ResultSet bloodReceivedResult = mysqlConvertStatement.executeQuery(bloodReceivedQuery);
-
-            while (bloodReceivedResult.next()) {
-                String bg = bloodReceivedResult.getString("bg_needed");
-                Double amt = bloodReceivedResult.getDouble("total");
-
-                receiversMap.put(bg, amt);
-            }
-
-            /**
-             *
-             * values will be stored like this -> receiversMap = {
-             * "O+":300,"B+":400,"AB-":500 }
-             *
-             *
-             */
-            donationsMap.forEach((bloodGroupKey, amountValue) -> {
-                double bloodAvailable = amountValue - (receiversMap.get(bloodGroupKey) == null ? 0 : receiversMap.get(bloodGroupKey));
-                bloodStock.put(bloodGroupKey, bloodAvailable);
-            });
-
-            bloodDonatedResult.close();
-            bloodReceivedResult.close();
-            this.connection.close();
-
-            return bloodStock;
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
         return null;
@@ -282,16 +292,19 @@ public class MysqlFunctions {
 
     /**
      * This function will update the receivers status in receiver table for
-     * given receiver id (receivers) .
+     * given receiver id (receivers) . Donation functionality
      *
      * @param id
-     * @param email
+     * @param bloodGroup
+     * @param amount
      *
      * @return true/false
      *
      */
-    public boolean UpdateReceiverStatus(int id) {
+    public boolean UpdateReceiverStatus(int id, String bloodGroup, Double amount) {
         String updateQuery = "UPDATE receiver SET status = 1 , rec_date = ? WHERE sno = ?;";
+
+        String updateBloodStockQuery = "UPDATE bloodstock SET amount = amount - ? WHERE blood_group = ?";
 
         try {
             PreparedStatement receiverUpdateStatement = this.connection.prepareStatement(updateQuery);
@@ -309,7 +322,14 @@ public class MysqlFunctions {
 
             if (isUpdated > 0) {
 
-                return true;
+                PreparedStatement bloodStockUpdateStatement = this.connection.prepareStatement(updateBloodStockQuery);
+                bloodStockUpdateStatement.setDouble(1, amount);
+                bloodStockUpdateStatement.setString(2, bloodGroup);
+
+                int isUpdatedBloodStock = bloodStockUpdateStatement.executeUpdate();
+                if (isUpdatedBloodStock == 1) {
+                    return true;
+                }
             }
 
         } catch (SQLException ex) {
@@ -740,6 +760,8 @@ public class MysqlFunctions {
 
         String updateDonorsQuery = "UPDATE donors SET status = 1 , last_donation = ? WHERE id = ? ";
 
+        String updateBloodStockQuery = "UPDATE bloodstock SET amount = amount + ? WHERE blood_group = ?";
+
         String targetDonorId = updateMap.get("donor_id");
         String targetDonationsRowId = updateMap.get("row_id");
 
@@ -770,7 +792,16 @@ public class MysqlFunctions {
                 rowsAffected = donorsUpdateStatement.executeUpdate();
 
                 if (rowsAffected > 0) {
-                    return 1;
+                    PreparedStatement bloodStockUpdateStatement = this.connection.prepareStatement(updateBloodStockQuery);
+
+                    bloodStockUpdateStatement.setDouble(1, Double.parseDouble(updateMap.get("quantity")));
+                    bloodStockUpdateStatement.setString(2, updateMap.get("blood_group"));
+
+                    int IsUpdatedBloodStock = bloodStockUpdateStatement.executeUpdate();
+
+                    if (IsUpdatedBloodStock == 1) {
+                        return 1;
+                    }
                 }
             }
         } catch (SQLException e) {

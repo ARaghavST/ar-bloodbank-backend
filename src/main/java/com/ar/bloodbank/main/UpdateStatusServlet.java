@@ -60,7 +60,7 @@ public class UpdateStatusServlet extends HttpServlet {
 
                 case "receiver":
 
-                    if (mysql.UpdateReceiverStatus(bodyInJavaObject.id)) {
+                    if (mysql.UpdateReceiverStatus(bodyInJavaObject.id, bodyInJavaObject.blood_group, bodyInJavaObject.amount)) {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Receiver status updated!", null, 1);
                     } else {
                         jsonRes = new JsonResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Cannot update receiver's status", "Exception occured! Please check logs in server", null);
