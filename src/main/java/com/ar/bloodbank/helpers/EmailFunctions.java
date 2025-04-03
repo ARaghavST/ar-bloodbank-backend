@@ -214,4 +214,67 @@ public class EmailFunctions {
         return false;
     }
 
+    public boolean sendReceiverApprovalMail(String targetName, String targetEmail, Double bloodAmount, String bloodGroup) {
+        // sets SMTP server properties
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", HOST);
+        properties.put("mail.smtp.port", PORT);
+        properties.put("mail.smtp.auth", "true");
+        // below line is for approval of successful handshake
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        // creates a new session with an authenticator
+        Authenticator auth = new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(USERNAME, PASSWORD);
+            }
+        };
+
+        // We are creating an email session , with above properties , auth
+        // Session is actually a timed work , means it is a type of task which should be completed within a time period , ex: 10 seconds
+        // Session is for 2 way handshake
+        Session session = Session.getInstance(properties, auth);
+
+        // creates a new e-mail message
+        Message msg = new MimeMessage(session);
+
+        String body = "Dear " + targetName + ",\n"
+                + "\n"
+                + "Your request for blood is completed."
+                + "\n"
+                + "Blood Amount : " + bloodAmount + " mL"
+                + "\n"
+                + "Blood Group : " + bloodGroup
+                + "\n"
+                + "We request you to come to our branch, to receive it."
+                + "\n"
+                + "Thanks"
+                + "\n"
+                + "Address : ABC Street, New Delhi"
+                + "\n"
+                + "Best regards,\n"
+                + "BloodBank Admin\n"
+                + "arbloodbank.1201@gmail.com";
+
+        try {
+
+            // pre-defined functionality
+            msg.setFrom(new InternetAddress(USERNAME));
+
+            InternetAddress[] toAddresses = {new InternetAddress(targetEmail)};
+            msg.setRecipients(Message.RecipientType.TO, toAddresses);
+            msg.setSubject("Blood Request Successful!");
+            msg.setText(body);
+
+            // sends the e-mail
+            Transport.send(msg);
+
+            return true;
+        } catch (MessagingException m) {
+            System.out.println("Exception occured in sending mail : " + m.getMessage());
+        }
+        return false;
+    }
+
 }

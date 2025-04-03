@@ -167,9 +167,10 @@ public class DonorServlet extends HttpServlet {
                 }
 
                 DonorResource signupData = gson.fromJson(sb.toString(), DonorResource.class);
-                if (mysql.InsertDonorData(signupData) == 1) {
+                int statusInserted = mysql.InsertDonorData(signupData);
+                if (statusInserted == 1) {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_OK, "Donor inserted successfully", null, 1);
-                } else if (mysql.InsertDonorData(signupData) == 2) {
+                } else if (statusInserted == 2) {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, null, "Email already in use!", 2);
                 } else {
                     jsonRes = new JsonResponse(HttpServletResponse.SC_BAD_REQUEST, "Cannot insert donor", "Exception occured! Please check logs in server", null);

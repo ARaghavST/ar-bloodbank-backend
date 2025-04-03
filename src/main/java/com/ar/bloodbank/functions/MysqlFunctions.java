@@ -6,6 +6,7 @@ import com.ar.bloodbank.helpers.RandomStringGenerator;
 import com.ar.bloodbank.resources.DonorResource;
 import com.ar.bloodbank.resources.ReceiverResource;
 import com.ar.bloodbank.resources.ReturnObject;
+import com.ar.bloodbank.resources.UpdateBodyResource;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -294,14 +295,14 @@ public class MysqlFunctions {
      * This function will update the receivers status in receiver table for
      * given receiver id (receivers) . Donation functionality
      *
+     * @param updateBody
      * @param id
-     * @param bloodGroup
-     * @param amount
+     *
      *
      * @return true/false
      *
      */
-    public boolean UpdateReceiverStatus(int id, String bloodGroup, Double amount) {
+    public boolean UpdateReceiverStatus(UpdateBodyResource updateBody) {
         String updateQuery = "UPDATE receiver SET status = 1 , rec_date = ? WHERE sno = ?;";
 
         String updateBloodStockQuery = "UPDATE bloodstock SET amount = amount - ? WHERE blood_group = ?";
@@ -316,19 +317,22 @@ public class MysqlFunctions {
             String recDate = now.format(formatter);
 
             receiverUpdateStatement.setString(1, recDate);
-            receiverUpdateStatement.setInt(2, id);
+            receiverUpdateStatement.setInt(2, updateBody.id);
 
             int isUpdated = receiverUpdateStatement.executeUpdate();
 
             if (isUpdated > 0) {
 
                 PreparedStatement bloodStockUpdateStatement = this.connection.prepareStatement(updateBloodStockQuery);
-                bloodStockUpdateStatement.setDouble(1, amount);
-                bloodStockUpdateStatement.setString(2, bloodGroup);
+                bloodStockUpdateStatement.setDouble(1, updateBody.amount);
+                bloodStockUpdateStatement.setString(2, updateBody.blood_group);
 
                 int isUpdatedBloodStock = bloodStockUpdateStatement.executeUpdate();
                 if (isUpdatedBloodStock == 1) {
-                    return true;
+                    EmailFunctions email = new EmailFunctions();
+                    boolean IsMailSent = email.sendReceiverApprovalMail(updateBody.name, updateBody.email, updateBody.amount, updateBody.blood_group);
+
+                    return IsMailSent;
                 }
             }
 
@@ -419,7 +423,7 @@ public class MysqlFunctions {
     public int InsertDonorData(DonorResource data) {
 
         // Line 422, is to check that email used in signup should be unique
-        String checkEmailQuery = "SELECT COUNT(*) as total from donors where email = ? ";
+        String checkEmailQuery = "SELECT COUNT(*) AS total FROM donors WHERE email = ? ";
         String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status,req_on) values (?,?,?,?,?,?,?,?,?,?)";
 
         try {
@@ -441,6 +445,7 @@ public class MysqlFunctions {
                 return 2;
             }
 
+            System.out.println("Email in unique. Proceed for insertion");
             PreparedStatement insertDonorStatement = this.connection.prepareStatement(insertDonorQuery);
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -472,6 +477,7 @@ public class MysqlFunctions {
                 }
 
             }
+            return 1;
 
         } catch (SQLException e) {
             System.out.println("Exception occured : " + e.getMessage());
