@@ -411,16 +411,36 @@ public class MysqlFunctions {
      * This function will insert the new donor data donors table for given id
      * (donors) .
      *
-     * @param signupData
      *
+     * @param data
      * @return true/false
      *
      */
     public int InsertDonorData(DonorResource data) {
 
+        // Line 422, is to check that email used in signup should be unique
+        String checkEmailQuery = "SELECT COUNT(*) as total from donors where email = ? ";
         String insertDonorQuery = "INSERT into donors (name,dob,gender,blood_group,email,phno,e_ready,availability,status,req_on) values (?,?,?,?,?,?,?,?,?,?)";
 
         try {
+
+            PreparedStatement emailCheckStatement = this.connection.prepareStatement(checkEmailQuery);
+            emailCheckStatement.setString(1, data.email);
+            ResultSet resultCount = emailCheckStatement.executeQuery();
+
+            // this flag is used to check whether we have an existing donor with email given in signup
+            boolean IsEmailAlreadyPresent = false;
+            while (resultCount.next()) {
+                if (resultCount.getInt("total") > 0) {
+                    IsEmailAlreadyPresent = true;
+                }
+            }
+
+            if (IsEmailAlreadyPresent) {
+                // this means that email we provided in signup is already present in donors
+                return 2;
+            }
+
             PreparedStatement insertDonorStatement = this.connection.prepareStatement(insertDonorQuery);
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -454,12 +474,6 @@ public class MysqlFunctions {
             }
 
         } catch (SQLException e) {
-
-            // In case of duplicate entry for any field , if we have applied UNIQUE constraint , then we get error code as 1062 from MYSQL EXCEPTION
-            if (e.getErrorCode() == 1062) {
-                return 2;
-            }
-
             System.out.println("Exception occured : " + e.getMessage());
         }
         return 0;
