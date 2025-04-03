@@ -201,7 +201,7 @@ public class EmailFunctions {
 
             InternetAddress[] toAddresses = {new InternetAddress(targetEmail)};
             msg.setRecipients(Message.RecipientType.TO, toAddresses);
-            msg.setSubject("SignUP Test approval");
+            msg.setSubject("Donation Test approval");
             msg.setText(body);
 
             // sends the e-mail
@@ -247,11 +247,13 @@ public class EmailFunctions {
                 + "\n"
                 + "Blood Group : " + bloodGroup
                 + "\n"
-                + "We request you to come to our branch, to receive it."
                 + "\n"
-                + "Thanks"
+                + "We request you to come to our branch, and receive it."
                 + "\n"
                 + "Address : ABC Street, New Delhi"
+                + "\n"
+                + "\n"
+                + "Thank You"
                 + "\n"
                 + "Best regards,\n"
                 + "BloodBank Admin\n"
