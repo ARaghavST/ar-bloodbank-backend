@@ -234,7 +234,7 @@ public class AdminServlet extends HttpServlet {
 
         if (connection != null) {
 
-            // Below line converts JSON string [ sb.toString() ] to JAVA POJO ( Map )
+            // Below line converts JSON string [ sb.toString() ] to  Map (or JAVA POJO)
             // we will convert json string into java map using Gson
             Map<String, String> adminDetails = gson.fromJson(sb.toString(), Map.class);
 

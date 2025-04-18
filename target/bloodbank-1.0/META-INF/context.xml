@@ -1,2 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--- Below line defines the main entry route of our web application backend URL    -->
 <Context path="/bloodbank"/>
